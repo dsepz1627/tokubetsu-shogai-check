@@ -10,13 +10,14 @@
     .fade-in{animation:fi .2s ease-in}
     @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
     input[type=number]::-webkit-inner-spin-button{opacity:1}
+    select,input[type=text],input[type=number]{font-size:16px}
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-blue-50 min-h-screen py-8 px-4">
 <div id="app" class="max-w-2xl mx-auto"></div>
 <script>
 // ═══════════════════════════════════════════════════════
-// STATE
+// STATE — 診断書様式第8号の全記載項目を網羅
 // ═══════════════════════════════════════════════════════
 const initState = () => ({
   step: 1,
@@ -24,49 +25,161 @@ const initState = () => ({
   disqualifyReason: '',
   age: '',
   isAdult: null,
-  disabilities: [],
+  disabilities: [],   // ['limb','vision','hearing','mental','internal']
 
   details: {
+    // ─── 肢体不自由（身体障害者診断書・意見書 肢体不自由用）
     limb: {
-      grade: '',
-      parts: [],
-      partFunc: {},
-      adl: Array(7).fill(''),
-      aids: [],
-      ventilator: '',
-      tubeFeed: '',
-      suction: ''
+      disease: '',            // 傷病名・原因疾患
+      grade: '',              // 身体障害者手帳等級 1-6
+      onset: '',              // 発症・受傷年月
+      fixed: '',              // 障害固定: 固定/未固定
+      parts: [],              // 障害部位（複数可）
+      partFunc: {},           // 各部位の機能状態
+      mobilityIndoor: '',     // 屋内移動手段
+      mobilityOutdoor: '',    // 屋外移動手段
+      sittingBalance: '',     // 起座位保持
+      mmtRightArm: '',        // 筋力MMT 右上肢 0-5
+      mmtLeftArm: '',         // 筋力MMT 左上肢 0-5
+      mmtRightLeg: '',        // 筋力MMT 右下肢 0-5
+      mmtLeftLeg: '',         // 筋力MMT 左下肢 0-5
+      adl: Array(7).fill(''), // ADL10点法（7項目×4段階）
+      aids: [],               // 補装具・補助器具
+      ventilator: '',         // 人工呼吸器
+      tubeFeed: '',           // 経管栄養
+      suction: '',            // 気道内吸引
+      ivDrip: ''              // 中心静脈栄養
     },
+
+    // ─── 視覚障害（身体障害者診断書・意見書 視覚障害用）
     vision: {
-      rightVision: '',
-      leftVision: '',
-      visualField: '',
-      lightPerception: '',
-      eyeDisease: ''
+      disease: '',            // 傷病名・原因疾患
+      grade: '',              // 手帳等級
+      onset: '',              // 発症年月
+      rightVision: '',        // 矯正視力（右眼）
+      leftVision: '',         // 矯正視力（左眼）
+      rightVisionRaw: '',     // 矯正前視力（右眼・参考）
+      leftVisionRaw: '',      // 矯正前視力（左眼・参考）
+      visualField: '',        // 視野の状態
+      rightFieldDeg: '',      // ゴールドマンI/4 右眼 角度
+      leftFieldDeg: '',       // ゴールドマンI/4 左眼 角度
+      centralScotoma: '',     // 中心暗点: あり/なし
+      colorVision: '',        // 色覚異常: あり/なし
+      lightPerception: '',    // 光覚: あり/なし（全盲）
+      progressive: '',        // 進行性: 進行性/非進行性
+      visualAid: ''           // 視覚補助具: 使用/不使用
     },
+
+    // ─── 聴覚・平衡機能障害（身体障害者診断書・意見書 聴覚障害用）
     hearing: {
-      rightDb: '',
-      leftDb: '',
-      speechDisc: '',
-      hearingAid: '',
-      balanceDisorder: ''
+      disease: '',            // 傷病名・原因疾患
+      grade: '',              // 手帳等級
+      onset: '',              // 発症年月
+      type: '',               // 難聴の種類: 感音性/伝音性/混合性
+      rightDb: '',            // 純音聴力検査 右耳（dB・4分法平均）
+      leftDb: '',             // 純音聴力検査 左耳（dB・4分法平均）
+      right500: '',           // 500Hz 右
+      right1000: '',          // 1000Hz 右
+      right2000: '',          // 2000Hz 右
+      right4000: '',          // 4000Hz 右
+      left500: '',            // 500Hz 左
+      left1000: '',           // 1000Hz 左
+      left2000: '',           // 2000Hz 左
+      left4000: '',           // 4000Hz 左
+      speechDisc: '',         // 語音明瞭度（%）
+      cochlearImplant: '',    // 人工内耳: あり/なし
+      hearingAid: '',         // 補聴器: あり/なし/あるが効果なし
+      balanceDisorder: '',    // 平衡機能障害: なし/あり（軽度）/あり（重度）
+      balanceMann: ''         // マン試験（起立・歩行）: 正常/異常
     },
+
+    // ─── 精神・知的障害（精神障害者保健福祉手帳用診断書 / 療育手帳）
     mental: {
-      disType: [],
-      pshGrade: '',
-      itGrade: '',
-      iq: '',
-      iqTestName: '',
+      disType: [],            // 障害種別: ['mental','intellectual','dementia']
+      // 共通
+      disease: '',            // 診断名（ICD-10）
+      onset: '',              // 初診年月
+      // 精神障害
+      pshGrade: '',           // 精神障害者保健福祉手帳等級
+      // 知的障害
+      itGrade: '',            // 療育手帳区分
+      iq: '',                 // IQ値
+      iqTestName: '',         // 使用した知能検査名
+      adaptiveBehavior: '',   // 適応行動: 著しく低い/かなり低い/低い
+      // 認知症
+      mmse: '',               // MMSE得点（0-30）
+      hdsr: '',               // HDS-R得点（0-30）
+      cdr: '',                // CDR（Clinical Dementia Rating）: 0/0.5/1/2/3
+      // 行動障害・意思疎通
+      behaviorDisorder: '',   // 行動障害: なし/あり（軽度）/あり（重度）
+      communication: '',      // 意思疎通: 可能/困難/不可能
+      selfInjury: '',         // 自傷行為: なし/あり
+      // 日常生活能力（精神障害7項目）
       mentalAdl: Array(7).fill('')
     },
+
+    // ─── 内部障害（身体障害者診断書・意見書 内部障害用）
     internal: {
-      subtypes: [],
-      heart:       { nyha: '', pacemaker: '', bnp: '', ef: '' },
-      kidney:      { dialysis: '', egfr: '', creatinine: '' },
-      respiratory: { vcPercent: '', fev1: '', hfo: '', pao2: '' },
-      liver:       { childPugh: '', albumin: '', ascites: '', encephalopathy: '' },
-      bladder:     { stoma: '', catheter: '' },
-      intestine:   { tpn: '', tube: '' }
+      subtypes: [],           // 選択された内部障害の種別
+      heart: {
+        disease: '',          // 傷病名（心疾患名）
+        nyha: '',             // NYHA心機能分類 I/II/III/IV
+        arrhythmia: '',       // 不整脈: なし/あり（種別）
+        pacemaker: '',        // ペースメーカー/ICD植込み
+        bnp: '',              // BNP値（pg/mL）
+        ef: '',               // 左室駆出率 EF（%）
+        sixMwt: ''            // 6分間歩行距離（m・参考）
+      },
+      kidney: {
+        disease: '',          // 傷病名（腎疾患名）
+        dialysis: '',         // 透析療法: なし/血液透析/腹膜透析
+        dialysisFreq: '',     // 透析回数（回/週）
+        egfr: '',             // eGFR（mL/min/1.73m²）
+        creatinine: '',       // 血清クレアチニン（mg/dL）
+        bun: '',              // 血液尿素窒素 BUN（mg/dL）
+        proteinuria: '',      // 尿蛋白: なし/±/+/++/+++
+        edema: ''             // 浮腫: なし/あり
+      },
+      respiratory: {
+        disease: '',          // 傷病名（呼吸器疾患名）
+        hfo: '',              // 在宅酸素療法（HOT）: なし/あり
+        hfoFlow: '',          // HOT流量（L/分）
+        hmv: '',              // 在宅人工呼吸器: なし/あり
+        vcPercent: '',        // %肺活量（%VC）
+        fev1: '',             // 一秒率（FEV1.0%）
+        pao2: '',             // 動脈血酸素分圧 PaO2（mmHg）
+        paco2: '',            // 動脈血二酸化炭素分圧 PaCO2（mmHg）
+        spo2: ''              // 経皮的酸素飽和度 SpO2（%）
+      },
+      liver: {
+        disease: '',          // 傷病名（肝疾患名）
+        childPugh: '',        // Child-Pugh分類 A/B/C
+        albumin: '',          // 血清アルブミン（g/dL）
+        ptInr: '',            // プロトロンビン時間 PT-INR
+        tbil: '',             // 総ビリルビン（mg/dL）
+        ascites: '',          // 腹水: なし/あり
+        encephalopathy: '',   // 肝性脳症: なし/あり
+        jaundice: ''          // 黄疸: なし/あり
+      },
+      bladder: {
+        disease: '',          // 傷病名
+        stomaType: '',        // ストーマ種別: なし/人工肛門/膀胱ろう/両方
+        catheter: '',         // カテーテル留置（常時）: なし/あり
+        incontinence: ''      // 尿失禁/便失禁: なし/あり
+      },
+      intestine: {
+        disease: '',          // 傷病名
+        tpn: '',              // 中心静脈栄養（TPN）: なし/あり
+        tube: '',             // 経管栄養: なし/あり
+        resectionRange: ''    // 小腸切除範囲: 参考テキスト
+      },
+      immune: {               // ★新規：免疫機能障害（HIV感染症等）
+        disease: '',          // 傷病名（HIV感染症等）
+        cd4: '',              // CD4陽性Tリンパ球数（/μL）
+        viralLoad: '',        // 血漿中HIVウイルス量（copies/mL）
+        artTherapy: '',       // 抗HIV療法（ART）: あり/なし
+        opportunistic: ''     // 日和見感染症の合併: なし/あり
+      }
     }
   }
 });
@@ -81,15 +194,16 @@ const DIS_LABELS = {
   vision:   '視覚障害',
   hearing:  '聴覚・平衡機能障害',
   mental:   '精神・知的障害・認知症',
-  internal: '内部障害（心臓・腎臓・呼吸器・肝臓など）'
+  internal: '内部障害（心臓・腎臓・呼吸器・肝臓・免疫機能など）'
 };
 
 const LIMB_PARTS = {
-  rightArm: '右上肢', leftArm: '左上肢',
-  rightLeg: '右下肢', leftLeg: '左下肢', trunk: '体幹'
+  rightArm:'右上肢', leftArm:'左上肢',
+  rightLeg:'右下肢', leftLeg:'左下肢', trunk:'体幹'
 };
-const LIMB_FUNC = ['機能全廃','著しく障害','一部障害','正常'];
-const LIMB_AIDS = ['車いす（常時）','車いす（一時）','松葉杖','義肢（上肢）','義肢（下肢）','装具','補助犬'];
+const LIMB_FUNC  = ['機能全廃','著しく障害','一部障害','正常'];
+const LIMB_AIDS  = ['車いす（常時）','車いす（一時）','松葉杖','義手','義足','上肢装具','下肢装具','体幹装具','補助犬'];
+const MMT_OPTS   = ['0（筋収縮なし）','1（わずかな収縮）','2（重力なしで動く）','3（重力に抗して動く）','4（抵抗に打ち勝てる）','5（正常）'];
 
 const ADL_ITEMS = [
   'つまさき立ち・片足立ち・一歩を踏み出す動作',
@@ -114,29 +228,35 @@ const MENTAL_ADL_ITEMS = [
 const MENTAL_ADL_OPTS = ['できない','強い援助が必要','部分的援助が必要','おおむねできる'];
 
 const INTERNAL_SUBTYPES = {
-  heart:       '心臓機能障害',
-  kidney:      '腎臓機能障害',
-  respiratory: '呼吸器機能障害',
-  liver:       '肝臓機能障害',
-  bladder:     '膀胱・直腸機能障害',
-  intestine:   '小腸機能障害'
+  heart:'心臓機能障害', kidney:'腎臓機能障害',
+  respiratory:'呼吸器機能障害', liver:'肝臓機能障害',
+  bladder:'膀胱・直腸機能障害', intestine:'小腸機能障害',
+  immune:'免疫機能障害（HIV感染症等）'
 };
 
 // ═══════════════════════════════════════════════════════
-// LOGIC
+// LOGIC — 各障害の実効等級（1=最重度, 2=重度, 3=中等度以下）
 // ═══════════════════════════════════════════════════════
 function gradeLimb() {
   const d = state.details.limb;
   if (d.ventilator === 'あり') return 1;
   if (d.adl.every(v => v !== '')) {
-    const sum = d.adl.reduce((a, v) => a + parseInt(v), 0);
+    const sum = d.adl.reduce((a,v) => a+parseInt(v), 0);
     if (sum <= 10) return 1;
     if (sum <= 17) return 2;
     return 3;
   }
+  // MMTで全廃に近い場合
+  const mmts = [d.mmtRightArm,d.mmtLeftArm,d.mmtRightLeg,d.mmtLeftLeg]
+    .filter(v=>v!=='').map(v=>parseInt(v));
+  if (mmts.length) {
+    const avg = mmts.reduce((a,v)=>a+v,0)/mmts.length;
+    if (avg <= 1) return 1;
+    if (avg <= 2) return 2;
+  }
   const g = parseInt(d.grade);
   if (!g) return null;
-  return g === 1 ? 1 : g === 2 ? 2 : 3;
+  return g===1?1:g===2?2:3;
 }
 
 function gradeVision() {
@@ -144,9 +264,18 @@ function gradeVision() {
   if (d.lightPerception === 'なし（全盲）') return 1;
   const r = parseFloat(d.rightVision), l = parseFloat(d.leftVision);
   if (!isNaN(r) && !isNaN(l)) {
-    const sum = r + l;
-    if (sum <= 0.04) return 1;
-    if (sum <= 0.08) return 2;
+    const s = r+l;
+    if (s <= 0.04) return 1;
+    if (s <= 0.08) return 2;
+    if (s <= 0.12) return 3;
+    return 3;
+  }
+  // 視野角度で補完
+  const rf = parseFloat(d.rightFieldDeg), lf = parseFloat(d.leftFieldDeg);
+  if (!isNaN(rf) && !isNaN(lf)) {
+    const avg = (rf+lf)/2;
+    if (avg <= 10) return 1;
+    if (avg <= 20) return 2;
     return 3;
   }
   return null;
@@ -154,11 +283,21 @@ function gradeVision() {
 
 function gradeHearing() {
   const d = state.details.hearing;
-  const r = parseFloat(d.rightDb), l = parseFloat(d.leftDb);
-  if (!isNaN(r) && !isNaN(l)) {
-    const better = Math.max(r, l);
+  // 4分法で計算できる場合
+  const calc4 = (f500,f1000,f2000,f4000) => {
+    const v = [parseFloat(f500),parseFloat(f1000)*2,parseFloat(f2000),parseFloat(f4000)];
+    if (v.every(x=>!isNaN(x))) return (v[0]+v[1]+v[2]+v[3])/4;
+    return NaN;
+  };
+  const r4 = calc4(d.right500,d.right1000,d.right2000,d.right4000);
+  const l4 = calc4(d.left500,d.left1000,d.left2000,d.left4000);
+  const rDb = !isNaN(r4)?r4:parseFloat(d.rightDb);
+  const lDb = !isNaN(l4)?l4:parseFloat(d.leftDb);
+  if (!isNaN(rDb) && !isNaN(lDb)) {
+    const better = Math.max(rDb,lDb);
     if (better >= 100) return 1;
     if (better >= 90)  return 2;
+    if (better >= 80)  return 3;
     return 3;
   }
   return null;
@@ -169,69 +308,89 @@ function gradeMental() {
   const grades = [];
   if (d.disType.includes('intellectual')) {
     const g = d.itGrade;
-    if (g === 'A重' || g === 'A') grades.push(1);
-    else if (g === 'B中') grades.push(2);
-    else if (g === 'B軽') grades.push(3);
+    if (g==='A重'||g==='A') grades.push(1);
+    else if (g==='B中') grades.push(2);
+    else if (g==='B軽') grades.push(3);
     const iq = parseFloat(d.iq);
     if (!isNaN(iq)) {
-      if (iq <= 35) grades.push(1);
-      else if (iq <= 50) grades.push(2);
+      if (iq<=35) grades.push(1);
+      else if (iq<=50) grades.push(2);
       else grades.push(3);
     }
   }
   if (d.disType.includes('mental')) {
-    const g = d.pshGrade;
-    if (g === '1') grades.push(1);
-    else if (g === '2') grades.push(2);
-    else if (g === '3') grades.push(3);
-    if (d.mentalAdl.every(v => v !== '')) {
-      const sum = d.mentalAdl.reduce((a, v) => a + parseInt(v), 0);
-      if (sum <= 10) grades.push(1);
-      else if (sum <= 17) grades.push(2);
+    if (d.pshGrade==='1') grades.push(1);
+    else if (d.pshGrade==='2') grades.push(2);
+    else if (d.pshGrade==='3') grades.push(3);
+    if (d.mentalAdl.every(v=>v!=='')) {
+      const s = d.mentalAdl.reduce((a,v)=>a+parseInt(v),0);
+      if (s<=10) grades.push(1); else if (s<=17) grades.push(2); else grades.push(3);
+    }
+  }
+  if (d.disType.includes('dementia')) {
+    const cdr = parseFloat(d.cdr);
+    if (!isNaN(cdr)) {
+      if (cdr>=3) grades.push(1);
+      else if (cdr>=2) grades.push(2);
+      else grades.push(3);
+    }
+    const mmse = parseFloat(d.mmse);
+    if (!isNaN(mmse)) {
+      if (mmse<=10) grades.push(1);
+      else if (mmse<=20) grades.push(2);
       else grades.push(3);
     }
   }
   return grades.length ? Math.min(...grades) : null;
 }
 
-function gradeInternalSubtype(type) {
+function gradeInternalSub(type) {
   const d = state.details.internal[type];
-  if (type === 'heart') {
-    if (d.nyha === 'IV') return 1;
-    if (d.nyha === 'III') return 2;
-    if (d.nyha === 'II' || d.nyha === 'I') return 3;
-    const bnp = parseFloat(d.bnp);
-    if (!isNaN(bnp)) { if (bnp >= 1000) return 1; if (bnp >= 500) return 2; }
+  if (type==='heart') {
+    if (d.nyha==='IV') return 1;
+    if (d.nyha==='III') return 2;
+    if (d.nyha==='II'||d.nyha==='I') return 3;
+    const bnp=parseFloat(d.bnp);
+    if (!isNaN(bnp)){if(bnp>=1000)return 1;if(bnp>=500)return 2;}
     return null;
   }
-  if (type === 'kidney') {
-    if (d.dialysis === '血液透析' || d.dialysis === '腹膜透析') return 1;
-    const egfr = parseFloat(d.egfr);
-    if (!isNaN(egfr)) { if (egfr <= 10) return 1; if (egfr <= 20) return 2; return 3; }
+  if (type==='kidney') {
+    if (d.dialysis==='血液透析'||d.dialysis==='腹膜透析') return 1;
+    const e=parseFloat(d.egfr);
+    if (!isNaN(e)){if(e<=10)return 1;if(e<=20)return 2;return 3;}
     return null;
   }
-  if (type === 'respiratory') {
-    if (d.hfo === 'あり') return 1;
-    const vc = parseFloat(d.vcPercent);
-    if (!isNaN(vc)) { if (vc <= 30) return 1; if (vc <= 50) return 2; return 3; }
-    const pao2 = parseFloat(d.pao2);
-    if (!isNaN(pao2)) { if (pao2 <= 50) return 1; if (pao2 <= 60) return 2; return 3; }
+  if (type==='respiratory') {
+    if (d.hfo==='あり') return 1;
+    if (d.hmv==='あり') return 1;
+    const vc=parseFloat(d.vcPercent);
+    if (!isNaN(vc)){if(vc<=30)return 1;if(vc<=50)return 2;return 3;}
+    const p=parseFloat(d.pao2);
+    if (!isNaN(p)){if(p<=50)return 1;if(p<=60)return 2;return 3;}
+    const sp=parseFloat(d.spo2);
+    if (!isNaN(sp)){if(sp<=85)return 1;if(sp<=90)return 2;return 3;}
     return null;
   }
-  if (type === 'liver') {
-    if (d.childPugh === 'C') return 1;
-    if (d.childPugh === 'B') return 2;
-    if (d.childPugh === 'A') return 3;
+  if (type==='liver') {
+    if (d.childPugh==='C') return 1;
+    if (d.childPugh==='B') return 2;
+    if (d.childPugh==='A') return 3;
     return null;
   }
-  if (type === 'bladder') {
-    if (d.stoma === 'あり' || d.catheter === 'あり') return 2;
+  if (type==='bladder') {
+    if (d.stomaType&&d.stomaType!=='なし') return 2;
+    if (d.catheter==='あり') return 2;
     return 3;
   }
-  if (type === 'intestine') {
-    if (d.tpn === 'あり') return 1;
-    if (d.tube === 'あり') return 2;
+  if (type==='intestine') {
+    if (d.tpn==='あり') return 1;
+    if (d.tube==='あり') return 2;
     return 3;
+  }
+  if (type==='immune') {
+    const cd4=parseFloat(d.cd4);
+    if (!isNaN(cd4)){if(cd4<=50)return 1;if(cd4<=200)return 2;return 3;}
+    return null;
   }
   return null;
 }
@@ -239,84 +398,78 @@ function gradeInternalSubtype(type) {
 function gradeInternal() {
   const subs = state.details.internal.subtypes;
   if (!subs.length) return null;
-  const grades = subs.map(t => gradeInternalSubtype(t)).filter(g => g !== null);
+  const grades = subs.map(t=>gradeInternalSub(t)).filter(g=>g!==null);
   return grades.length ? Math.min(...grades) : null;
 }
 
 function getGrade(type) {
-  const fn = { limb: gradeLimb, vision: gradeVision, hearing: gradeHearing, mental: gradeMental, internal: gradeInternal };
-  return fn[type] ? fn[type]() : null;
+  return {limb:gradeLimb,vision:gradeVision,hearing:gradeHearing,
+    mental:gradeMental,internal:gradeInternal}[type]?.() ?? null;
 }
 
-function combineTwo(g1, g2) {
-  const a = Math.min(g1, g2), b = Math.max(g1, g2);
-  if (a === b) return Math.max(1, a - 1);
-  if (b - a === 1) return a;
+function combineTwo(g1,g2){
+  const a=Math.min(g1,g2),b=Math.max(g1,g2);
+  if(a===b) return Math.max(1,a-1);
+  if(b-a===1) return a;
   return a;
 }
 
 function assess() {
-  const selected = state.disabilities;
-  if (!selected.length) return { result: 'ineligible', grades: {} };
-  const grades = {};
-  selected.forEach(t => { const g = getGrade(t); if (g !== null) grades[t] = g; });
-  const vals = Object.values(grades);
-  if (!vals.length) return { result: 'ineligible', grades };
-  const threshold = state.isAdult ? 1 : 2;
+  const sel = state.disabilities;
+  if (!sel.length) return {result:'ineligible',grades:{}};
+  const grades={};
+  sel.forEach(t=>{const g=getGrade(t);if(g!==null)grades[t]=g;});
+  const vals=Object.values(grades);
+  if (!vals.length) return {result:'ineligible',grades};
+  const thr = state.isAdult?1:2;
   const best = Math.min(...vals);
-  if (best <= threshold) {
-    const single = Object.keys(grades).find(k => grades[k] <= threshold);
-    return { result: 'eligible_single', grades, singleType: single };
+  if (best<=thr) {
+    const single=Object.keys(grades).find(k=>grades[k]<=thr);
+    return {result:'eligible_single',grades,singleType:single};
   }
-  if (vals.length >= 2) {
-    const sorted = [...vals].sort((a, b) => a - b);
-    let combined = sorted[0];
-    for (let i = 1; i < sorted.length; i++) {
-      combined = combineTwo(combined, sorted[i]);
-      if (combined <= threshold) break;
-    }
-    if (combined <= threshold) return { result: 'eligible_combined', grades };
+  if (vals.length>=2) {
+    const sorted=[...vals].sort((a,b)=>a-b);
+    let c=sorted[0];
+    for(let i=1;i<sorted.length;i++){c=combineTwo(c,sorted[i]);if(c<=thr)break;}
+    if(c<=thr) return {result:'eligible_combined',grades};
   }
-  return { result: 'ineligible', grades };
+  return {result:'ineligible',grades};
 }
 
 // ═══════════════════════════════════════════════════════
-// RENDERER HELPERS
+// RENDER HELPERS
 // ═══════════════════════════════════════════════════════
 function renderApp() {
-  const app = document.getElementById('app');
-  app.innerHTML = '';
-  const wrap = document.createElement('div');
-  wrap.insertAdjacentHTML('beforeend', `
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.insertAdjacentHTML('beforeend',`
     <div class="text-center mb-6">
       <h1 class="text-2xl font-extrabold text-gray-800">特別障害者手当 簡易判定システム</h1>
       <p class="text-xs text-gray-400 mt-1">厚生労働省「特別障害者手当等支給事務の手引き」準拠</p>
     </div>
   `);
-  if (!state.disqualified && state.step <= 5) wrap.appendChild(stepBar());
-  if (state.disqualified) {
-    wrap.appendChild(disqualifiedScreen());
-  } else {
-    [null, step1, step2, step3, step4, step5][state.step](wrap);
-  }
-  wrap.insertAdjacentHTML('beforeend', `
+  if(!state.disqualified&&state.step<=5) wrap.appendChild(stepBar());
+  if(state.disqualified) wrap.appendChild(disqScreen());
+  else [null,step1,step2,step3,step4,step5][state.step](wrap);
+  wrap.insertAdjacentHTML('beforeend',`
     <p class="text-center text-xs text-gray-400 mt-6 pb-4">
       ※この判定は医療専門職の診断・行政審査に代わるものではありません。
     </p>
   `);
   app.appendChild(wrap);
   bindEvents();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function stepBar() {
-  const labels = ['基本確認','年齢','障害区分','詳細入力','判定結果'];
-  const d = document.createElement('div');
-  d.className = 'flex items-center justify-between mb-8';
-  d.innerHTML = labels.map((lbl, i) => {
-    const n = i+1, active = n===state.step, done = n<state.step;
-    const c = active?'bg-blue-600 text-white shadow':done?'bg-emerald-500 text-white':'bg-gray-200 text-gray-400';
-    const t = active?'text-blue-600 font-bold':done?'text-emerald-600':'text-gray-400';
+  const labels=['基本確認','年齢','障害区分','詳細入力','判定結果'];
+  const d=document.createElement('div');
+  d.className='flex items-center justify-between mb-8';
+  d.innerHTML=labels.map((lbl,i)=>{
+    const n=i+1,active=n===state.step,done=n<state.step;
+    const c=active?'bg-blue-600 text-white shadow':done?'bg-emerald-500 text-white':'bg-gray-200 text-gray-400';
+    const t=active?'text-blue-600 font-bold':done?'text-emerald-600':'text-gray-400';
     return `<div class="flex flex-col items-center flex-1">
       <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${c}">${done?'✓':n}</div>
       <span class="text-xs mt-1 ${t} hidden sm:block">${lbl}</span>
@@ -325,23 +478,23 @@ function stepBar() {
   return d;
 }
 
-function appendCard(wrap, html) {
-  const d = document.createElement('div');
-  d.className = 'bg-white rounded-2xl shadow-lg p-6 fade-in';
-  d.innerHTML = html;
-  wrap.appendChild(d);
-}
+function card(html){const d=document.createElement('div');d.className='bg-white rounded-2xl shadow-lg p-6 fade-in';d.innerHTML=html;return d;}
+function appendCard(w,html){w.appendChild(card(html));}
+function sec(html){const d=document.createElement('div');d.className='bg-white rounded-2xl shadow-lg p-6 mt-3 fade-in';d.innerHTML=html;return d;}
 
-function h2(t) { return `<h2 class="text-lg font-bold text-gray-800 mb-1">${t}</h2>`; }
-
-function badge(text, color='blue') {
+function h2(t){return `<h2 class="text-lg font-bold text-gray-800 mb-1">${t}</h2>`;}
+function badge(t,c='blue'){
   const m={blue:'bg-blue-100 text-blue-700',orange:'bg-orange-100 text-orange-700',
     purple:'bg-purple-100 text-purple-700',teal:'bg-teal-100 text-teal-700',
-    rose:'bg-rose-100 text-rose-700'};
-  return `<span class="text-xs font-bold px-2 py-1 rounded-full ${m[color]||m.blue}">${text}</span>`;
+    rose:'bg-rose-100 text-rose-700',indigo:'bg-indigo-100 text-indigo-700'};
+  return `<span class="text-xs font-bold px-2 py-1 rounded-full ${m[c]||m.blue}">${t}</span>`;
+}
+function secHeader(label,color,borderColor){
+  return `<div class="flex items-center gap-2 mb-5 pb-2 border-b-2 ${borderColor}">
+    ${badge(label,color)}<span class="font-bold text-gray-800">診断書記載事項</span></div>`;
 }
 
-function selEl(id, val, opts) {
+function sel(id,val,opts){
   return `<select id="${id}" class="border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-400 outline-none w-full">
     <option value="">── 選択 ──</option>
     ${opts.map(o=>typeof o==='string'
@@ -350,90 +503,86 @@ function selEl(id, val, opts) {
     ).join('')}
   </select>`;
 }
-
-function numEl(id, val, ph, unit='') {
+function num(id,val,ph,unit='',step='any'){
   return `<div class="flex items-center gap-2">
-    <input type="number" id="${id}" value="${val}" placeholder="${ph}" step="any"
-      class="border border-gray-300 rounded-lg p-2 w-32 text-center focus:ring-2 focus:ring-blue-400 outline-none text-sm">
+    <input type="number" id="${id}" value="${val}" placeholder="${ph}" step="${step}"
+      class="border border-gray-300 rounded-lg p-2 w-28 text-center focus:ring-2 focus:ring-blue-400 outline-none text-sm">
     ${unit?`<span class="text-gray-500 text-sm">${unit}</span>`:''}
   </div>`;
 }
-
-function field(label, input, note='') {
-  return `<div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 mb-1">${label}</label>
-    ${input}
-    ${note?`<p class="text-xs text-gray-400 mt-1">${note}</p>`:''}
-  </div>`;
+function txt(id,val,ph){
+  return `<input type="text" id="${id}" value="${val}" placeholder="${ph}"
+    class="border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-400 outline-none w-full">`;
 }
+function fld(label,input,note=''){
+  return `<div class="mb-4"><label class="block text-sm font-medium text-gray-700 mb-1">${label}</label>
+    ${input}${note?`<p class="text-xs text-gray-400 mt-1">${note}</p>`:''}</div>`;
+}
+function grid2(a,b){return `<div class="grid grid-cols-2 gap-3">${a}${b}</div>`;}
+function grid3(a,b,c){return `<div class="grid grid-cols-3 gap-3">${a}${b}${c}</div>`;}
 
-function chkLabel(cls, key, checked, label, color='blue') {
+function chk(cls,key,checked,label,color='blue'){
   const m={blue:'border-blue-400 bg-blue-50',orange:'border-orange-400 bg-orange-50',
     purple:'border-purple-400 bg-purple-50',rose:'border-rose-400 bg-rose-50',teal:'border-teal-400 bg-teal-50'};
-  return `<label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition text-sm
+  return `<label class="flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition text-sm
     ${checked?(m[color]||m.blue):'border-gray-200 hover:border-gray-300'}">
     <input type="checkbox" class="${cls} w-4 h-4 shrink-0" data-key="${key}" ${checked?'checked':''}>
-    <span class="font-medium text-gray-700">${label}</span>
-  </label>`;
+    <span class="font-medium text-gray-700">${label}</span></label>`;
 }
-
-function radioOpt(name, val, label, checked, color='blue') {
-  const m={blue:'border-blue-400 bg-blue-50 text-blue-800',orange:'border-orange-400 bg-orange-50 text-orange-700',
-    purple:'border-purple-400 bg-purple-50 text-purple-700',teal:'border-teal-400 bg-teal-50 text-teal-700'};
-  return `<label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition text-sm
-    ${checked?(m[color]||m.blue):'border-gray-200 hover:border-gray-300 text-gray-700'}">
-    <input type="radio" name="${name}" value="${val}" class="shrink-0" ${checked?'checked':''}>
-    ${label}
-  </label>`;
+function radioOpt(name,val,label,checked,color='orange'){
+  const m={orange:'border-orange-400 bg-orange-50 text-orange-700',
+    purple:'border-purple-400 bg-purple-50 text-purple-700',
+    blue:'border-blue-400 bg-blue-50 text-blue-700'};
+  return `<label class="flex items-center gap-1.5 p-2 rounded-lg border text-xs cursor-pointer transition
+    ${checked?(m[color]||m.orange):'border-gray-200 hover:border-gray-300 text-gray-600'}">
+    <input type="radio" name="${name}" value="${val}" class="shrink-0" ${checked?'checked':''}>${label}</label>`;
 }
 
 // ═══════════════════════════════════════════════════════
-// ① ステップ1
+// ① 基本要件チェック
 // ═══════════════════════════════════════════════════════
-function step1(wrap) {
-  appendCard(wrap, `
+function step1(wrap){
+  appendCard(wrap,`
     ${h2('① 基本要件の確認')}
-    <p class="text-sm text-gray-500 mb-5">以下に1つでも該当する場合、手当は支給されません。</p>
+    <p class="text-sm text-gray-500 mb-5">以下に1つでも該当する場合、その時点で不該当となります（法第26条の2第2項）。</p>
     <div class="space-y-3 mb-6">
       <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:border-red-300 cursor-pointer transition">
-        <input type="checkbox" id="chk_facility" class="mt-0.5 w-4 h-4 shrink-0">
+        <input type="checkbox" id="chk_f" class="mt-0.5 w-4 h-4 shrink-0">
         <div>
-          <span class="text-sm font-medium text-gray-800">施設に入所していますか？</span>
-          <p class="text-xs text-gray-500 mt-0.5">障害者支援施設・特別養護老人ホーム・グループホーム等</p>
+          <p class="text-sm font-medium text-gray-800">施設に入所していますか？</p>
+          <p class="text-xs text-gray-500 mt-0.5">障害者支援施設・特別養護老人ホーム・グループホーム（一定要件）等</p>
         </div>
       </label>
       <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:border-red-300 cursor-pointer transition">
-        <input type="checkbox" id="chk_hospital" class="mt-0.5 w-4 h-4 shrink-0">
+        <input type="checkbox" id="chk_h" class="mt-0.5 w-4 h-4 shrink-0">
         <div>
-          <span class="text-sm font-medium text-gray-800">病院・診療所に3ヶ月を超えて入院していますか？</span>
-          <p class="text-xs text-gray-500 mt-0.5">継続して3ヶ月超の入院が対象（短期・外泊は除く）</p>
+          <p class="text-sm font-medium text-gray-800">病院・診療所に3ヶ月を超えて入院していますか？</p>
+          <p class="text-xs text-gray-500 mt-0.5">継続して3ヶ月超の入院（外泊・一時帰宅中も入院扱い）</p>
         </div>
       </label>
     </div>
     <button id="btn1" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">
       次へ → ②年齢確認
-    </button>
-  `);
+    </button>`);
 }
 
 // ═══════════════════════════════════════════════════════
-// ② ステップ2
+// ② 年齢確認
 // ═══════════════════════════════════════════════════════
-function step2(wrap) {
-  appendCard(wrap, `
+function step2(wrap){
+  appendCard(wrap,`
     ${h2('② 年齢の確認')}
     <p class="text-sm text-gray-500 mb-5">対象手当の種類を確定します。</p>
     <div class="mb-5">
       <label class="block text-sm font-medium text-gray-700 mb-1">現在の年齢</label>
       <div class="flex items-center gap-2">
-        <input type="number" id="age_input" value="${state.age}" min="0" max="120"
-          class="border border-gray-300 rounded-xl p-3 w-28 text-center text-xl font-bold focus:ring-2 focus:ring-blue-400 outline-none"
-          placeholder="35">
+        <input type="number" id="age_in" value="${state.age}" min="0" max="120"
+          class="border border-gray-300 rounded-xl p-3 w-28 text-center text-xl font-bold focus:ring-2 focus:ring-blue-400 outline-none" placeholder="35">
         <span class="text-gray-600 font-medium">歳</span>
       </div>
     </div>
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm mb-6">
-      <p class="font-bold text-blue-800 mb-1">対象手当</p>
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm">
+      <p class="font-bold text-blue-800 mb-1">判定対象の手当</p>
       <ul class="text-xs text-blue-700 space-y-0.5">
         <li>・ <strong>20歳以上</strong> → 特別障害者手当（法第26条の2）</li>
         <li>・ <strong>20歳未満</strong> → 障害児福祉手当（法第17条）</li>
@@ -442,545 +591,688 @@ function step2(wrap) {
     <div class="flex gap-3">
       <button onclick="goStep(1)" class="flex-1 border border-gray-300 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition">← 戻る</button>
       <button id="btn2" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">次へ → ③障害区分</button>
-    </div>
-  `);
+    </div>`);
 }
 
 // ═══════════════════════════════════════════════════════
-// ③ ステップ3
+// ③ 障害区分選択
 // ═══════════════════════════════════════════════════════
-function step3(wrap) {
-  const allowance = state.isAdult ? '特別障害者手当' : '障害児福祉手当';
-  appendCard(wrap, `
+function step3(wrap){
+  const allow=state.isAdult?'特別障害者手当':'障害児福祉手当';
+  appendCard(wrap,`
     ${h2('③ 障害区分の選択')}
-    <div class="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3 bg-blue-100 text-blue-700">${allowance}の判定</div>
-    <p class="text-sm text-gray-500 mb-4">該当するものをすべて選択してください（複数可）。</p>
+    <span class="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3 bg-blue-100 text-blue-700">${allow}の判定</span>
+    <p class="text-sm text-gray-500 mb-4">該当するものをすべて選択してください（複数可）。複数選択時は個別に詳細入力 → 自動で併合判定します。</p>
     <div class="space-y-2 mb-6">
-      ${Object.entries(DIS_LABELS).map(([k,v]) => chkLabel('dis-chk', k, state.disabilities.includes(k), v)).join('')}
+      ${Object.entries(DIS_LABELS).map(([k,v])=>chk('dis-chk',k,state.disabilities.includes(k),v)).join('')}
     </div>
     <div class="flex gap-3">
       <button onclick="goStep(2)" class="flex-1 border border-gray-300 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition">← 戻る</button>
       <button id="btn3" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">次へ → ④詳細入力</button>
-    </div>
-  `);
-}
-
-// ═══════════════════════════════════════════════════════
-// ④ ステップ4
-// ═══════════════════════════════════════════════════════
-function step4(wrap) {
-  const header = document.createElement('div');
-  header.className = 'bg-white rounded-2xl shadow-lg px-6 pt-6 pb-2 fade-in';
-  header.innerHTML = `${h2('④ 詳細データの入力（診断書全項目）')}
-    <p class="text-sm text-gray-500 mb-4">診断書の記載内容をもとに各項目を入力してください。</p>`;
-  wrap.appendChild(header);
-
-  state.disabilities.forEach(k => {
-    const sec = document.createElement('div');
-    sec.className = 'bg-white rounded-2xl shadow-lg p-6 mt-3 fade-in';
-    sec.innerHTML = buildSection(k);
-    wrap.appendChild(sec);
-  });
-
-  const footer = document.createElement('div');
-  footer.className = 'bg-white rounded-2xl shadow-lg p-6 mt-3 fade-in';
-  footer.innerHTML = `
-    <div class="flex gap-3">
-      <button onclick="goStep(3)" class="flex-1 border border-gray-300 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition">← 戻る</button>
-      <button id="btn4" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">判定する → ⑤結果</button>
-    </div>`;
-  wrap.appendChild(footer);
-}
-
-function buildSection(key) {
-  const builders = { limb: buildLimb, vision: buildVision, hearing: buildHearing, mental: buildMental, internal: buildInternal };
-  return builders[key] ? builders[key]() : '';
-}
-
-// ─── 肢体不自由 ──────────────────────────────────────
-function buildLimb() {
-  const d = state.details.limb;
-  return `
-    <div class="flex items-center gap-2 mb-4 pb-2 border-b-2 border-orange-200">
-      ${badge('肢体不自由','orange')}
-      <span class="font-bold text-gray-800">診断書記載事項</span>
-    </div>
-    ${field('手帳等級 <span class="text-red-500">*必須</span>',
-      selEl('limb_grade', d.grade, [{v:'1',l:'1級'},{v:'2',l:'2級'},{v:'3',l:'3級'},{v:'4',l:'4級'},{v:'5',l:'5級'},{v:'6',l:'6級'}])
-    )}
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">障害部位（複数可）</label>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        ${Object.entries(LIMB_PARTS).map(([k,v]) => chkLabel('limb-part', k, d.parts.includes(k), v, 'orange')).join('')}
-      </div>
-    </div>
-    ${d.parts.length ? `
-    <div class="mb-4 bg-orange-50 rounded-xl p-4">
-      <p class="text-sm font-medium text-gray-700 mb-3">各部位の機能状態</p>
-      ${d.parts.map(p => `
-        <div class="mb-3">
-          <p class="text-xs text-gray-500 mb-1">${LIMB_PARTS[p]}</p>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-            ${LIMB_FUNC.map(f => {
-              const sel = d.partFunc[p]===f;
-              return `<label class="flex items-center gap-1.5 p-2 rounded-lg border text-xs cursor-pointer transition
-                ${sel?'border-orange-400 bg-orange-100 text-orange-700':'border-gray-200 hover:border-orange-300 text-gray-600'}">
-                <input type="radio" name="pf_${p}" value="${f}" class="pf-radio shrink-0" data-part="${p}" ${sel?'checked':''}>
-                ${f}</label>`;
-            }).join('')}
-          </div>
-        </div>
-      `).join('')}
-    </div>` : ''}
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">補装具・補助器具（複数可）</label>
-      <div class="grid grid-cols-2 gap-1.5">
-        ${LIMB_AIDS.map(a => chkLabel('limb-aid', a, d.aids.includes(a), a, 'orange')).join('')}
-      </div>
-    </div>
-    <div class="grid grid-cols-3 gap-3 mb-5">
-      ${['人工呼吸器','経管栄養','吸引処置'].map((lbl,i) => {
-        const ids = ['limb_vent','limb_tube','limb_suction'];
-        const vals = [d.ventilator, d.tubeFeed, d.suction];
-        return `<div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">${lbl}</label>
-          ${selEl(ids[i], vals[i], ['なし','あり'])}
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 text-xs text-amber-800">
-      <strong>ADL 10点法評価</strong>（全7項目入力で等級自動算出・任意・入力推奨）
-    </div>
-    <div class="space-y-3">
-      ${ADL_ITEMS.map((item, i) => `
-        <div class="border border-gray-200 rounded-xl p-4">
-          <p class="text-sm font-medium text-gray-700 mb-2">${i+1}. ${item}</p>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-            ${ADL_OPTS.map((opt, j) => {
-              const v=j+1, sel=d.adl[i]==v;
-              return `<label class="flex items-center gap-1.5 p-2 rounded-lg border text-xs cursor-pointer transition
-                ${sel?'border-orange-400 bg-orange-50 text-orange-700':'border-gray-200 hover:border-orange-300 text-gray-600'}">
-                <input type="radio" name="adl_${i}" value="${v}" class="adl-radio shrink-0" data-idx="${i}" ${sel?'checked':''}>
-                ${opt}</label>`;
-            }).join('')}
-          </div>
-        </div>
-      `).join('')}
-    </div>`;
-}
-
-// ─── 視覚障害 ────────────────────────────────────────
-function buildVision() {
-  const d = state.details.vision;
-  const r = parseFloat(d.rightVision), l = parseFloat(d.leftVision);
-  const sumText = (!isNaN(r)&&!isNaN(l)) ? `両眼の和：${(r+l).toFixed(2)}（≦0.04→1級相当 / ≦0.08→2級相当）` : '';
-  return `
-    <div class="flex items-center gap-2 mb-4 pb-2 border-b-2 border-blue-200">
-      ${badge('視覚障害','blue')}
-      <span class="font-bold text-gray-800">診断書記載事項</span>
-    </div>
-    <div class="grid grid-cols-2 gap-4 mb-2">
-      ${field('矯正視力（右眼）', numEl('vision_right', d.rightVision, '0.04'))}
-      ${field('矯正視力（左眼）', numEl('vision_left', d.leftVision, '0.04'))}
-    </div>
-    ${sumText ? `<div class="text-xs text-blue-700 bg-blue-50 px-3 py-2 rounded-lg mb-4 font-medium">📊 ${sumText}</div>` : ''}
-    ${field('視野の状態（ゴールドマン視野計）',
-      selEl('vision_field', d.visualField, ['正常','狭窄あり','高度狭窄（求心性収縮）','ほぼ欠損'])
-    )}
-    ${field('光覚', selEl('vision_light', d.lightPerception, ['あり','なし（全盲）']))}
-    ${field('原因疾患（参考）',
-      `<input type="text" id="vision_disease" value="${d.eyeDisease}" placeholder="例：網膜色素変性症"
-        class="border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-400 outline-none w-full">`
-    )}`;
-}
-
-// ─── 聴覚障害 ────────────────────────────────────────
-function buildHearing() {
-  const d = state.details.hearing;
-  const r = parseFloat(d.rightDb), l = parseFloat(d.leftDb);
-  const betterText = (!isNaN(r)&&!isNaN(l)) ? `良聴耳：${Math.max(r,l)}dB（≧100dB→2級手帳相当 / ≧90dB→3級手帳相当）` : '';
-  return `
-    <div class="flex items-center gap-2 mb-4 pb-2 border-b-2 border-teal-200">
-      ${badge('聴覚・平衡機能障害','teal')}
-      <span class="font-bold text-gray-800">診断書記載事項</span>
-    </div>
-    <div class="grid grid-cols-2 gap-4 mb-2">
-      ${field('右耳聴力レベル', numEl('hear_right', d.rightDb, '100', 'dB'))}
-      ${field('左耳聴力レベル', numEl('hear_left', d.leftDb, '100', 'dB'))}
-    </div>
-    ${betterText ? `<div class="text-xs text-teal-700 bg-teal-50 px-3 py-2 rounded-lg mb-4 font-medium">📊 ${betterText}</div>` : ''}
-    ${field('語音明瞭度', numEl('hear_disc', d.speechDisc, '30', '%'), '0%＝全く聞き取れない / 100%＝明瞭')}
-    ${field('補聴器の使用状況', selEl('hear_aid', d.hearingAid, ['なし','あり（効果あり）','あり（効果なし）']))}
-    ${field('平衡機能障害', selEl('hear_balance', d.balanceDisorder, ['なし','あり（軽度）','あり（重度）']))}`;
-}
-
-// ─── 精神・知的障害 ──────────────────────────────────
-function buildMental() {
-  const d = state.details.mental;
-  return `
-    <div class="flex items-center gap-2 mb-4 pb-2 border-b-2 border-purple-200">
-      ${badge('精神・知的障害','purple')}
-      <span class="font-bold text-gray-800">診断書記載事項</span>
-    </div>
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">障害種別（複数可）</label>
-      <div class="grid grid-cols-2 gap-2">
-        ${[['mental','精神障害'],['intellectual','知的障害']].map(([k,v]) =>
-          chkLabel('mental-type', k, d.disType.includes(k), v, 'purple')
-        ).join('')}
-      </div>
-    </div>
-    ${d.disType.includes('intellectual') ? `
-    <div class="bg-purple-50 rounded-xl p-4 mb-4">
-      <p class="text-sm font-bold text-gray-700 mb-3">知的障害の記載事項</p>
-      ${field('療育手帳区分',
-        selEl('it_grade', d.itGrade, [
-          {v:'A重',l:'A（最重度・IQ概ね20以下）'},
-          {v:'A',  l:'A（重度・IQ概ね21〜35）'},
-          {v:'B中',l:'B（中度・IQ概ね36〜50）'},
-          {v:'B軽',l:'B（軽度・IQ概ね51〜75）'},
-          {v:'なし',l:'手帳なし'}
-        ])
-      )}
-      <div class="grid grid-cols-2 gap-4">
-        ${field('IQ値', numEl('mental_iq', d.iq, '35'))}
-        ${field('検査名', `<input type="text" id="mental_iqtest" value="${d.iqTestName}" placeholder="例：WISC-V"
-          class="border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-400 outline-none w-full">`)}
-      </div>
-    </div>` : ''}
-    ${d.disType.includes('mental') ? `
-    <div class="bg-purple-50 rounded-xl p-4 mb-4">
-      <p class="text-sm font-bold text-gray-700 mb-3">精神障害の記載事項</p>
-      ${field('精神障害者保健福祉手帳',
-        selEl('psh_grade', d.pshGrade, [
-          {v:'1',l:'1級（日常生活が不可能な程度）'},
-          {v:'2',l:'2級（日常生活が著しく制限される）'},
-          {v:'3',l:'3級（日常生活に一定の制限）'},
-          {v:'なし',l:'手帳なし'}
-        ])
-      )}
-      <div class="bg-white rounded-lg p-3 mt-3">
-        <p class="text-xs font-bold text-gray-600 mb-1">日常生活能力の判定（7項目）</p>
-        <p class="text-xs text-gray-500 mb-3">全項目を入力すると精度が向上します（任意）</p>
-        <div class="space-y-3">
-          ${MENTAL_ADL_ITEMS.map((item, i) => `
-            <div class="border border-gray-200 rounded-lg p-3">
-              <p class="text-xs font-medium text-gray-700 mb-2">${i+1}. ${item}</p>
-              <div class="grid grid-cols-2 gap-1.5">
-                ${MENTAL_ADL_OPTS.map((opt, j) => {
-                  const v=j+1, sel=d.mentalAdl[i]==v;
-                  return `<label class="flex items-center gap-1 p-2 rounded-lg border text-xs cursor-pointer transition
-                    ${sel?'border-purple-400 bg-purple-50 text-purple-700':'border-gray-200 hover:border-purple-300 text-gray-600'}">
-                    <input type="radio" name="madl_${i}" value="${v}" class="madl-radio shrink-0" data-idx="${i}" ${sel?'checked':''}>
-                    ${opt}</label>`;
-                }).join('')}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>` : ''}
-    ${!d.disType.length ? `
-    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800">
-      上の「障害種別」を選択すると詳細項目が表示されます。
-    </div>` : ''}`;
-}
-
-// ─── 内部障害 ────────────────────────────────────────
-function buildInternal() {
-  const d = state.details.internal;
-  return `
-    <div class="flex items-center gap-2 mb-4 pb-2 border-b-2 border-rose-200">
-      ${badge('内部障害','rose')}
-      <span class="font-bold text-gray-800">診断書記載事項</span>
-    </div>
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">内部障害の種別（複数可）</label>
-      <div class="grid grid-cols-2 gap-2">
-        ${Object.entries(INTERNAL_SUBTYPES).map(([k,v]) =>
-          chkLabel('int-sub', k, d.subtypes.includes(k), v, 'rose')
-        ).join('')}
-      </div>
-    </div>
-    ${d.subtypes.map(t => buildInternalSub(t)).join('')}`;
-}
-
-function buildInternalSub(type) {
-  const d = state.details.internal[type];
-  const title = INTERNAL_SUBTYPES[type];
-  const wrap = (html) => `<div class="bg-rose-50 rounded-xl p-4 mb-3">
-    <p class="text-sm font-bold text-gray-700 mb-3">● ${title}</p>${html}</div>`;
-
-  if (type==='heart') return wrap(`
-    ${field('NYHA心機能分類',
-      selEl('heart_nyha', d.nyha, [
-        {v:'I',l:'I度：通常の活動で症状なし'},
-        {v:'II',l:'II度：通常の活動でわずかに制限'},
-        {v:'III',l:'III度：通常以下の活動で著明に制限'},
-        {v:'IV',l:'IV度：安静時でも症状あり（最重症）'}
-      ])
-    )}
-    <div class="grid grid-cols-2 gap-4">
-      ${field('ペースメーカー/ICD', selEl('heart_pm', d.pacemaker, ['なし','あり']))}
-      ${field('BNP値', numEl('heart_bnp', d.bnp, '500', 'pg/mL'))}
-    </div>
-    ${field('左室駆出率（EF）', numEl('heart_ef', d.ef, '30', '%'))}`);
-
-  if (type==='kidney') return wrap(`
-    ${field('透析療法', selEl('kidney_dialysis', d.dialysis, ['なし','血液透析','腹膜透析']))}
-    <div class="grid grid-cols-2 gap-4">
-      ${field('eGFR', numEl('kidney_egfr', d.egfr, '15', 'mL/min/1.73m²'))}
-      ${field('血清クレアチニン', numEl('kidney_cr', d.creatinine, '3.0', 'mg/dL'))}
     </div>`);
+}
 
-  if (type==='respiratory') return wrap(`
-    ${field('在宅酸素療法（HOT）', selEl('resp_hfo', d.hfo, ['なし','あり']))}
-    <div class="grid grid-cols-2 gap-4">
-      ${field('%肺活量（%VC）', numEl('resp_vc', d.vcPercent, '30', '%'))}
-      ${field('一秒率（FEV1.0%）', numEl('resp_fev', d.fev1, '50', '%'))}
+// ═══════════════════════════════════════════════════════
+// ④ 詳細入力（診断書全項目）
+// ═══════════════════════════════════════════════════════
+function step4(wrap){
+  const hd=document.createElement('div');
+  hd.className='bg-white rounded-2xl shadow-lg px-6 pt-6 pb-2 fade-in';
+  hd.innerHTML=`${h2('④ 詳細データの入力（診断書全項目）')}
+    <p class="text-sm text-gray-500 mb-4">
+      ${state.disabilities.length===1
+        ? '単一障害の詳細を入力してください。'
+        : `複数障害（${state.disabilities.length}種）が選択されています。それぞれ個別に詳細を入力してください。`}
+    </p>`;
+  wrap.appendChild(hd);
+  state.disabilities.forEach(k=>{
+    const s=sec(buildSec(k));
+    wrap.appendChild(s);
+  });
+  const ft=document.createElement('div');
+  ft.className='bg-white rounded-2xl shadow-lg p-6 mt-3 fade-in';
+  ft.innerHTML=`<div class="flex gap-3">
+    <button onclick="goStep(3)" class="flex-1 border border-gray-300 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-50 transition">← 戻る</button>
+    <button id="btn4" class="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">判定する → ⑤結果</button>
+  </div>`;
+  wrap.appendChild(ft);
+}
+
+function buildSec(k){
+  const b={limb:buildLimb,vision:buildVision,hearing:buildHearing,mental:buildMental,internal:buildInternal};
+  return b[k]?b[k]():'';
+}
+
+// ─── 肢体不自由（身体障害者診断書・意見書 肢体不自由用）─────
+function buildLimb(){
+  const d=state.details.limb;
+  return `
+  ${secHeader('肢体不自由','orange','border-orange-200')}
+  ${grid2(
+    fld('傷病名・原因疾患',txt('limb_disease',d.disease,'例：脳梗塞後遺症')),
+    fld('発症・受傷年月',txt('limb_onset',d.onset,'例：2020年3月'))
+  )}
+  ${grid2(
+    fld('身体障害者手帳等級 <span class="text-red-500">*</span>',
+      sel('limb_grade',d.grade,[{v:'1',l:'1級'},{v:'2',l:'2級'},{v:'3',l:'3級'},{v:'4',l:'4級'},{v:'5',l:'5級'},{v:'6',l:'6級'}])
+    ),
+    fld('障害固定の別',sel('limb_fixed',d.fixed,['固定','未固定']))
+  )}
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">障害部位（複数可）</label>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      ${Object.entries(LIMB_PARTS).map(([k,v])=>chk('limb-part',k,d.parts.includes(k),v,'orange')).join('')}
     </div>
-    ${field('動脈血酸素分圧（PaO₂）', numEl('resp_pao2', d.pao2, '60', 'mmHg'))}`);
+  </div>
 
-  if (type==='liver') return wrap(`
-    ${field('Child-Pugh分類',
-      selEl('liver_cp', d.childPugh, [{v:'A',l:'A（代償性・軽症）'},{v:'B',l:'B（中等度非代償性）'},{v:'C',l:'C（非代償性・重症）'}])
+  ${d.parts.length?`
+  <div class="mb-4 bg-orange-50 rounded-xl p-4">
+    <p class="text-sm font-medium text-gray-700 mb-3">各部位の機能状態（診断書記載）</p>
+    ${d.parts.map(p=>`
+      <div class="mb-3">
+        <p class="text-xs text-gray-500 mb-1">${LIMB_PARTS[p]}</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          ${LIMB_FUNC.map(f=>{const s=d.partFunc[p]===f;
+            return `<label class="flex items-center gap-1 p-2 rounded-lg border text-xs cursor-pointer
+              ${s?'border-orange-400 bg-orange-100 text-orange-700':'border-gray-200 text-gray-600'}">
+              <input type="radio" name="pf_${p}" value="${f}" class="pf-radio" data-part="${p}" ${s?'checked':''}>${f}</label>`;
+          }).join('')}
+        </div>
+      </div>`).join('')}
+  </div>`:''}
+
+  <div class="mb-5">
+    <p class="text-sm font-medium text-gray-700 mb-2">筋力（MMT 0〜5）</p>
+    <div class="grid grid-cols-2 gap-3">
+      ${[['右上肢','limb_mmt_ra',d.mmtRightArm],['左上肢','limb_mmt_la',d.mmtLeftArm],
+         ['右下肢','limb_mmt_rl',d.mmtRightLeg],['左下肢','limb_mmt_ll',d.mmtLeftLeg]].map(([lbl,id,val])=>
+        fld(lbl,sel(id,val,[{v:'0',l:'0（収縮なし）'},{v:'1',l:'1（わずか）'},{v:'2',l:'2（重力なし）'},
+          {v:'3',l:'3（重力に抗す）'},{v:'4',l:'4（抵抗に打ち勝つ）'},{v:'5',l:'5（正常）'}]))
+      ).join('')}
+    </div>
+  </div>
+
+  ${grid2(
+    fld('屋内移動手段',sel('limb_mob_in',d.mobilityIndoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','寝たきり'])),
+    fld('屋外移動手段',sel('limb_mob_out',d.mobilityOutdoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','外出不可']))
+  )}
+  ${fld('起座位保持',sel('limb_sit',d.sittingBalance,['可能','介助があれば可能','不可能']))}
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">補装具・補助器具（複数可）</label>
+    <div class="grid grid-cols-2 gap-1.5">
+      ${LIMB_AIDS.map(a=>chk('limb-aid',a,d.aids.includes(a),a,'orange')).join('')}
+    </div>
+  </div>
+
+  ${grid2(
+    fld('人工呼吸器',sel('limb_vent',d.ventilator,['なし','あり'])),
+    fld('経管栄養',sel('limb_tube',d.tubeFeed,['なし','あり']))
+  )}
+  ${grid2(
+    fld('気道内吸引',sel('limb_suc',d.suction,['なし','あり'])),
+    fld('中心静脈栄養',sel('limb_iv',d.ivDrip,['なし','あり']))
+  )}
+
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 text-xs text-amber-800">
+    <strong>ADL 10点法評価（全7項目・任意・入力で等級を自動算出）</strong>
+  </div>
+  <div class="space-y-3">
+    ${ADL_ITEMS.map((item,i)=>`
+      <div class="border border-gray-200 rounded-xl p-4">
+        <p class="text-sm font-medium text-gray-700 mb-2">${i+1}. ${item}</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          ${ADL_OPTS.map((opt,j)=>{const v=j+1,s=d.adl[i]==v;
+            return `<label class="flex items-center gap-1 p-2 rounded-lg border text-xs cursor-pointer
+              ${s?'border-orange-400 bg-orange-50 text-orange-700':'border-gray-200 text-gray-600'}">
+              <input type="radio" name="adl_${i}" value="${v}" class="adl-r" data-idx="${i}" ${s?'checked':''}>${opt}</label>`;
+          }).join('')}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+// ─── 視覚障害（身体障害者診断書・意見書 視覚障害用）──────
+function buildVision(){
+  const d=state.details.vision;
+  const r=parseFloat(d.rightVision),l=parseFloat(d.leftVision);
+  const sumTxt=(!isNaN(r)&&!isNaN(l))?`両眼の和：${(r+l).toFixed(2)}（≦0.04→1級相当 / ≦0.08→2級相当）`:'';
+  return `
+  ${secHeader('視覚障害','blue','border-blue-200')}
+  ${grid2(
+    fld('傷病名・原因疾患',txt('vis_disease',d.disease,'例：網膜色素変性症')),
+    fld('発症年月',txt('vis_onset',d.onset,'例：2018年'))
+  )}
+  ${grid2(
+    fld('身体障害者手帳等級',sel('vis_grade',d.grade,[{v:'1',l:'1級'},{v:'2',l:'2級'},{v:'3',l:'3級'},{v:'4',l:'4級'},{v:'5',l:'5級'}])),
+    fld('進行性の有無',sel('vis_prog',d.progressive,['非進行性','進行性']))
+  )}
+
+  <div class="bg-blue-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">視力（矯正後）</p>
+    ${grid2(
+      fld('右眼 矯正視力',num('vis_r',d.rightVision,'0.04')),
+      fld('左眼 矯正視力',num('vis_l',d.leftVision,'0.04'))
     )}
-    <div class="grid grid-cols-2 gap-4">
-      ${field('腹水', selEl('liver_asc', d.ascites, ['なし','あり']))}
-      ${field('肝性脳症', selEl('liver_enc', d.encephalopathy, ['なし','あり']))}
+    ${grid2(
+      fld('右眼 矯正前視力（参考）',num('vis_r_raw',d.rightVisionRaw,'0.1')),
+      fld('左眼 矯正前視力（参考）',num('vis_l_raw',d.leftVisionRaw,'0.1'))
+    )}
+    ${sumTxt?`<div class="text-xs text-blue-700 bg-white px-3 py-2 rounded-lg mt-1 font-medium">📊 ${sumTxt}</div>`:''}
+  </div>
+
+  <div class="bg-blue-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">視野（ゴールドマン視野計）</p>
+    ${fld('視野の状態',sel('vis_field',d.visualField,['正常','狭窄あり','高度狭窄（求心性収縮）','ほぼ欠損']))}
+    ${grid2(
+      fld('I/4 右眼 視野角度',num('vis_rf',d.rightFieldDeg,'15','°')),
+      fld('I/4 左眼 視野角度',num('vis_lf',d.leftFieldDeg,'15','°'))
+    )}
+  </div>
+
+  ${grid2(
+    fld('光覚',sel('vis_light',d.lightPerception,['あり','なし（全盲）'])),
+    fld('中心暗点',sel('vis_scotoma',d.centralScotoma,['なし','あり']))
+  )}
+  ${grid2(
+    fld('色覚異常',sel('vis_color',d.colorVision,['なし','あり'])),
+    fld('視覚補助具',sel('vis_aid',d.visualAid,['使用なし','拡大鏡','点字','音声読み上げ']))
+  )}`;
+}
+
+// ─── 聴覚・平衡機能障害（身体障害者診断書・意見書 聴覚障害用）──
+function buildHearing(){
+  const d=state.details.hearing;
+  const r=parseFloat(d.rightDb),l=parseFloat(d.leftDb);
+  const betterTxt=(!isNaN(r)&&!isNaN(l))?`良聴耳：${Math.max(r,l)}dB（≧100dB→2級手帳相当 / ≧90dB→3級手帳相当）`:'';
+  return `
+  ${secHeader('聴覚・平衡機能障害','teal','border-teal-200')}
+  ${grid2(
+    fld('傷病名・原因疾患',txt('hear_disease',d.disease,'例：感音性難聴')),
+    fld('発症年月',txt('hear_onset',d.onset,'例：先天性'))
+  )}
+  ${grid2(
+    fld('身体障害者手帳等級',sel('hear_grade',d.grade,[{v:'2',l:'2級'},{v:'3',l:'3級'},{v:'4',l:'4級'},{v:'5',l:'5級'},{v:'6',l:'6級'}])),
+    fld('難聴の種類',sel('hear_type',d.type,['感音性','伝音性','混合性','その他']))
+  )}
+
+  <div class="bg-teal-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-1">純音聴力検査（各周波数・dB）</p>
+    <p class="text-xs text-gray-500 mb-3">4分法平均を直接入力する場合は下の「4分法平均」欄のみ記入可</p>
+    <div class="grid grid-cols-4 gap-2 mb-3">
+      <p class="text-xs font-medium text-gray-600 col-span-1"></p>
+      ${['500Hz','1000Hz','2000Hz','4000Hz'].map(f=>`<p class="text-xs font-medium text-gray-600 text-center">${f}</p>`).join('')}
+      <p class="text-xs font-medium text-teal-700">右耳</p>
+      ${[['hear_r500',d.right500],['hear_r1000',d.right1000],['hear_r2000',d.right2000],['hear_r4000',d.right4000]].map(([id,v])=>
+        `<input type="number" id="${id}" value="${v}" placeholder="dB" step="5"
+          class="border border-gray-300 rounded-lg p-1.5 text-center text-xs focus:ring-1 focus:ring-teal-400 outline-none">`
+      ).join('')}
+      <p class="text-xs font-medium text-teal-700">左耳</p>
+      ${[['hear_l500',d.left500],['hear_l1000',d.left1000],['hear_l2000',d.left2000],['hear_l4000',d.left4000]].map(([id,v])=>
+        `<input type="number" id="${id}" value="${v}" placeholder="dB" step="5"
+          class="border border-gray-300 rounded-lg p-1.5 text-center text-xs focus:ring-1 focus:ring-teal-400 outline-none">`
+      ).join('')}
     </div>
-    ${field('血清アルブミン', numEl('liver_alb', d.albumin, '2.8', 'g/dL'))}`);
+    ${grid2(
+      fld('4分法平均 右耳（dB）',num('hear_r',d.rightDb,'100','dB')),
+      fld('4分法平均 左耳（dB）',num('hear_l',d.leftDb,'100','dB'))
+    )}
+    ${betterTxt?`<div class="text-xs text-teal-700 bg-white px-3 py-2 rounded-lg font-medium">📊 ${betterTxt}</div>`:''}
+  </div>
 
-  if (type==='bladder') return wrap(`
-    ${field('永久的人工肛門・膀胱ろう', selEl('bladder_stoma', d.stoma, ['なし','あり']))}
-    ${field('カテーテル留置（常時）', selEl('bladder_cath', d.catheter, ['なし','あり']))}`);
+  ${fld('語音明瞭度（%）',num('hear_disc',d.speechDisc,'30','%'),'0%＝全く聞き取れない / 100%＝明瞭')}
+  ${grid2(
+    fld('補聴器の使用状況',sel('hear_aid',d.hearingAid,['なし','あり（効果あり）','あり（効果なし）'])),
+    fld('人工内耳',sel('hear_ci',d.cochlearImplant,['なし','あり']))
+  )}
+  ${grid2(
+    fld('平衡機能障害',sel('hear_bal',d.balanceDisorder,['なし','あり（軽度）','あり（重度）'])),
+    fld('マン試験（起立・歩行）',sel('hear_mann',d.balanceMann,['正常','異常']))
+  )}`;
+}
 
-  if (type==='intestine') return wrap(`
-    ${field('中心静脈栄養（TPN）', selEl('int_tpn', d.tpn, ['なし','あり']))}
-    ${field('経管栄養（鼻腔・胃ろう）', selEl('int_tube', d.tube, ['なし','あり']))}`);
+// ─── 精神・知的障害・認知症 ──────────────────────────
+function buildMental(){
+  const d=state.details.mental;
+  return `
+  ${secHeader('精神・知的障害・認知症','purple','border-purple-200')}
+  ${grid2(
+    fld('診断名（ICD-10）',txt('men_disease',d.disease,'例：統合失調症 F20')),
+    fld('初診年月',txt('men_onset',d.onset,'例：2015年4月'))
+  )}
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">障害種別（複数可）</label>
+    <div class="grid grid-cols-3 gap-2">
+      ${[['mental','精神障害'],['intellectual','知的障害'],['dementia','認知症']].map(([k,v])=>
+        chk('mental-type',k,d.disType.includes(k),v,'purple')
+      ).join('')}
+    </div>
+  </div>
+
+  ${d.disType.includes('intellectual')?`
+  <div class="bg-purple-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">知的障害の記載事項</p>
+    ${fld('療育手帳区分',sel('it_grade',d.itGrade,[
+      {v:'A重',l:'A（最重度・IQ概ね20以下）'},{v:'A',l:'A（重度・IQ概ね21〜35）'},
+      {v:'B中',l:'B（中度・IQ概ね36〜50）'},{v:'B軽',l:'B（軽度・IQ概ね51〜75）'},{v:'なし',l:'手帳なし'}
+    ]))}
+    ${grid2(
+      fld('IQ値',num('men_iq',d.iq,'35')),
+      fld('検査名',txt('men_iqt',d.iqTestName,'例：WISC-V'))
+    )}
+    ${fld('適応行動の水準',sel('men_adapt',d.adaptiveBehavior,['著しく低い（最重度）','かなり低い（重度）','低い（中度）','ほぼ平均以下（軽度）']))}
+  </div>`:''}
+
+  ${d.disType.includes('mental')?`
+  <div class="bg-purple-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">精神障害の記載事項</p>
+    ${fld('精神障害者保健福祉手帳',sel('psh_grade',d.pshGrade,[
+      {v:'1',l:'1級（日常生活が不可能な程度）'},{v:'2',l:'2級（日常生活が著しく制限）'},
+      {v:'3',l:'3級（日常生活に一定の制限）'},{v:'なし',l:'手帳なし'}
+    ]))}
+    <div class="bg-white rounded-lg p-3 mt-3">
+      <p class="text-xs font-bold text-gray-600 mb-2">日常生活能力の判定（7項目 × 4段階）</p>
+      <div class="space-y-3">
+        ${MENTAL_ADL_ITEMS.map((item,i)=>`
+          <div class="border border-gray-200 rounded-lg p-3">
+            <p class="text-xs font-medium text-gray-700 mb-2">${i+1}. ${item}</p>
+            <div class="grid grid-cols-2 gap-1.5">
+              ${MENTAL_ADL_OPTS.map((opt,j)=>{const v=j+1,s=d.mentalAdl[i]==v;
+                return `<label class="flex items-center gap-1 p-2 rounded-lg border text-xs cursor-pointer
+                  ${s?'border-purple-400 bg-purple-50 text-purple-700':'border-gray-200 text-gray-600'}">
+                  <input type="radio" name="madl_${i}" value="${v}" class="madl-r" data-idx="${i}" ${s?'checked':''}>${opt}</label>`;
+              }).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`:''}
+
+  ${d.disType.includes('dementia')?`
+  <div class="bg-purple-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">認知症の記載事項</p>
+    ${grid3(
+      fld('MMSE得点（0-30）',num('men_mmse',d.mmse,'15'),'30点満点。21点以下で認知症疑い'),
+      fld('HDS-R得点（0-30）',num('men_hdsr',d.hdsr,'15'),'20点以下で認知症疑い'),
+      fld('CDR',sel('men_cdr',d.cdr,[{v:'0',l:'0（正常）'},{v:'0.5',l:'0.5（疑い）'},{v:'1',l:'1（軽度）'},{v:'2',l:'2（中等度）'},{v:'3',l:'3（重度）'}]))
+    )}
+  </div>`:''}
+
+  ${grid2(
+    fld('行動障害',sel('men_bd',d.behaviorDisorder,['なし','あり（軽度）','あり（重度）'])),
+    fld('意思疎通',sel('men_comm',d.communication,['可能','困難','不可能']))
+  )}
+  ${fld('自傷・他傷行為',sel('men_si',d.selfInjury,['なし','あり（軽度）','あり（重度）']))}
+
+  ${!d.disType.length?`
+  <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800">
+    上の「障害種別」を選択すると詳細項目が表示されます。
+  </div>`:''}`;
+}
+
+// ─── 内部障害（各種別・診断書全項目）──────────────────
+function buildInternal(){
+  const d=state.details.internal;
+  return `
+  ${secHeader('内部障害','rose','border-rose-200')}
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">内部障害の種別（複数可）</label>
+    <div class="grid grid-cols-2 gap-2">
+      ${Object.entries(INTERNAL_SUBTYPES).map(([k,v])=>chk('int-sub',k,d.subtypes.includes(k),v,'rose')).join('')}
+    </div>
+  </div>
+  ${d.subtypes.map(t=>buildIntSub(t)).join('')}`;
+}
+
+function wrap_sub(title,html){
+  return `<div class="bg-rose-50 rounded-xl p-4 mb-3"><p class="text-sm font-bold text-gray-700 mb-3">● ${title}</p>${html}</div>`;
+}
+
+function buildIntSub(type){
+  const d=state.details.internal[type];
+  const title=INTERNAL_SUBTYPES[type];
+  if(type==='heart') return wrap_sub(title,`
+    ${fld('傷病名',txt('h_disease',d.disease,'例：拡張型心筋症'))}
+    ${fld('NYHA心機能分類',sel('h_nyha',d.nyha,[
+      {v:'I',l:'I度：通常の活動で症状なし'},
+      {v:'II',l:'II度：通常の活動でわずかに制限'},
+      {v:'III',l:'III度：通常以下の活動で著明に制限'},
+      {v:'IV',l:'IV度：安静時でも症状・ほぼ寝たきり'}
+    ]))}
+    ${fld('不整脈の合併',txt('h_arr',d.arrhythmia,'例：心房細動、完全房室ブロック等'))}
+    ${grid2(
+      fld('ペースメーカー/ICD植込み',sel('h_pm',d.pacemaker,['なし','あり'])),
+      fld('BNP値',num('h_bnp',d.bnp,'500','pg/mL'))
+    )}
+    ${grid2(
+      fld('左室駆出率（EF）',num('h_ef',d.ef,'30','%')),
+      fld('6分間歩行距離（参考）',num('h_6mwt',d.sixMwt,'300','m'))
+    )}`);
+
+  if(type==='kidney') return wrap_sub(title,`
+    ${fld('傷病名',txt('k_disease',d.disease,'例：慢性腎臓病、糖尿病性腎症'))}
+    ${fld('透析療法',sel('k_dial',d.dialysis,['なし','血液透析','腹膜透析']))}
+    ${d.dialysis&&d.dialysis!=='なし'?fld('透析回数',num('k_freq',d.dialysisFreq,'3','回/週')):''}
+    ${grid2(
+      fld('eGFR',num('k_egfr',d.egfr,'15','mL/min/1.73m²')),
+      fld('血清クレアチニン',num('k_cr',d.creatinine,'3.0','mg/dL'))
+    )}
+    ${grid2(
+      fld('血液尿素窒素（BUN）',num('k_bun',d.bun,'40','mg/dL')),
+      fld('尿蛋白',sel('k_prot',d.proteinuria,['なし','±','+','++','+++']))
+    )}
+    ${fld('浮腫',sel('k_edema',d.edema,['なし','あり']))}`);
+
+  if(type==='respiratory') return wrap_sub(title,`
+    ${fld('傷病名',txt('r_disease',d.disease,'例：慢性閉塞性肺疾患（COPD）'))}
+    ${grid2(
+      fld('在宅酸素療法（HOT）',sel('r_hfo',d.hfo,['なし','あり'])),
+      fld('在宅人工呼吸器',sel('r_hmv',d.hmv,['なし','あり']))
+    )}
+    ${d.hfo==='あり'?fld('HOT流量',num('r_flow',d.hfoFlow,'2','L/分')):''}
+    ${grid2(
+      fld('%肺活量（%VC）',num('r_vc',d.vcPercent,'30','%')),
+      fld('一秒率（FEV1.0%）',num('r_fev',d.fev1,'50','%'))
+    )}
+    ${grid3(
+      fld('PaO₂（mmHg）',num('r_pao2',d.pao2,'60','mmHg')),
+      fld('PaCO₂（mmHg）',num('r_paco2',d.paco2,'45','mmHg')),
+      fld('SpO₂（%）',num('r_spo2',d.spo2,'92','%'))
+    )}`);
+
+  if(type==='liver') return wrap_sub(title,`
+    ${fld('傷病名',txt('l_disease',d.disease,'例：肝硬変（C型）'))}
+    ${fld('Child-Pugh分類',sel('l_cp',d.childPugh,[{v:'A',l:'A（代償性・軽症）'},{v:'B',l:'B（中等度非代償性）'},{v:'C',l:'C（非代償性・重症）'}]))}
+    ${grid2(
+      fld('血清アルブミン',num('l_alb',d.albumin,'2.8','g/dL')),
+      fld('PT-INR',num('l_ptr',d.ptInr,'1.8'))
+    )}
+    ${grid2(
+      fld('総ビリルビン',num('l_tbil',d.tbil,'3.0','mg/dL')),
+      fld('腹水',sel('l_asc',d.ascites,['なし','あり']))
+    )}
+    ${grid2(
+      fld('肝性脳症',sel('l_enc',d.encephalopathy,['なし','あり'])),
+      fld('黄疸',sel('l_jau',d.jaundice,['なし','あり']))
+    )}`);
+
+  if(type==='bladder') return wrap_sub(title,`
+    ${fld('傷病名',txt('b_disease',d.disease,'例：膀胱癌術後、直腸癌術後'))}
+    ${fld('ストーマの種別',sel('b_stoma',d.stomaType,['なし','人工肛門（永久）','膀胱ろう（永久）','人工肛門＋膀胱ろう両方']))}
+    ${grid2(
+      fld('カテーテル留置（常時）',sel('b_cath',d.catheter,['なし','あり'])),
+      fld('失禁の状況',sel('b_inco',d.incontinence,['なし','尿失禁あり','便失禁あり','両方あり']))
+    )}`);
+
+  if(type==='intestine') return wrap_sub(title,`
+    ${fld('傷病名',txt('i_disease',d.disease,'例：クローン病、短腸症候群'))}
+    ${grid2(
+      fld('中心静脈栄養（TPN）',sel('i_tpn',d.tpn,['なし','あり'])),
+      fld('経管栄養（鼻腔・胃ろう）',sel('i_tube',d.tube,['なし','あり']))
+    )}
+    ${fld('小腸切除範囲（参考）',txt('i_res',d.resectionRange,'例：空腸・回腸の80%切除'))}`);
+
+  if(type==='immune') return wrap_sub(title,`
+    ${fld('傷病名',txt('im_disease',d.disease,'例：HIV感染症'))}
+    ${grid2(
+      fld('CD4陽性Tリンパ球数',num('im_cd4',d.cd4,'200','/μL')),
+      fld('血漿中ウイルス量',num('im_vl',d.viralLoad,'500','copies/mL'))
+    )}
+    ${grid2(
+      fld('抗HIV療法（ART）',sel('im_art',d.artTherapy,['なし','あり'])),
+      fld('日和見感染症の合併',sel('im_oi',d.opportunistic,['なし','あり']))
+    )}`);
 
   return '';
 }
 
 // ═══════════════════════════════════════════════════════
-// ⑤ ステップ5：判定・根拠出力
+// ⑤ 判定・根拠出力（章・節・条文・関連法令すべて）
 // ═══════════════════════════════════════════════════════
-const LAW = '特別児童扶養手当等の支給に関する法律（昭和39年法律第134号）';
+const LAW_MAIN  = '特別児童扶養手当等の支給に関する法律（昭和39年法律第134号）';
+const LAW_REI   = '特別児童扶養手当等の支給に関する法律施行令（昭和39年政令第224号）';
+const LAW_SOKU  = '特別児童扶養手当等の支給に関する法律施行規則（昭和39年厚生省令第31号）';
+const LAW_SHINTAI = '身体障害者福祉法施行規則（昭和25年厚生省令第15号）別表第5号（身体障害者障害程度等級表）';
+const LAW_KYO   = '国民年金法施行令（昭和34年政令第184号）別表（障害等級表・参考）';
+const NOTICE    = '昭和60年3月25日 社庶第58号 厚生省社会局長通知「特別障害者手当等の障害程度認定基準について」';
 
-const CITATIONS = {
+const CITS = {
   adult_single: {
-    law: `${LAW} 第26条の2第1項`,
-    text: '「精神又は身体に著しく重度の障害を有するため、日常生活において常時特別の介護を必要とする状態にある在宅の二十歳以上の者（…）に特別障害者手当を支給する。」',
-    manual: '特別障害者手当等支給事務の手引き<br>第3章第2節「各障害の程度認定基準」─ 各障害の単独認定条項',
-    notice: '昭和50年厚生省告示第264号「特別障害者手当の支給に関する省令」'
+    result:'認定可能性：高（単独該当）',
+    allow:'特別障害者手当',
+    article:`${LAW_MAIN} 第26条の2第1項`,
+    text:'「精神又は身体に著しく重度の障害を有するため、日常生活において常時特別の介護を必要とする状態にある在宅の二十歳以上の者（…）に特別障害者手当を支給する。」',
+    manual:'特別障害者手当等支給事務の手引き\n　第3章「障害程度認定基準」\n　第2節「各障害の程度認定基準」各障害の単独認定条項',
+    related:[
+      `${LAW_REI} 第1条（認定対象者の要件）`,
+      `${NOTICE}`,
+      `${LAW_SHINTAI}（各身体障害の等級基準）`
+    ],
+    notice:'昭和50年厚生省告示第264号「特別障害者手当の支給に関する省令」'
   },
   adult_combined: {
-    law: `${LAW} 第26条の2第1項`,
-    text: '（単独では認定基準未達だが、複数障害の重複により常時特別な介護を必要とする状態と認定）',
-    manual: '特別障害者手当等支給事務の手引き<br>第3章第3節「二以上の障害がある場合の障害程度の認定」<br>別表1（併合認定表）',
-    notice: '昭和50年厚生省告示第264号'
+    result:'認定可能性：高（併合該当）',
+    allow:'特別障害者手当',
+    article:`${LAW_MAIN} 第26条の2第1項`,
+    text:'（単独では認定基準未達だが、複数障害の重複により常時特別な介護を必要とする状態と総合認定）',
+    manual:'特別障害者手当等支給事務の手引き\n　第3章「障害程度認定基準」\n　第3節「二以上の障害がある場合の障害程度の認定」\n　別表1（障害程度の併合認定表）',
+    related:[
+      `${LAW_REI} 第1条`,
+      `${NOTICE}（別表1 併合認定表）`,
+      `${LAW_SHINTAI}（等級根拠）`
+    ],
+    notice:'昭和50年厚生省告示第264号'
   },
   child_single: {
-    law: `${LAW} 第17条第1項`,
-    text: '「精神又は身体に重度の障害を有するため、日常生活において常時の介護を必要とする状態にある在宅の二十歳未満の者（…）に障害児福祉手当を支給する。」',
-    manual: '特別障害者手当等支給事務の手引き<br>第3章第2節「各障害の程度認定基準」',
-    notice: '昭和50年厚生省告示第263号「障害児福祉手当の支給に関する省令」'
+    result:'認定可能性：高（単独該当）',
+    allow:'障害児福祉手当',
+    article:`${LAW_MAIN} 第17条第1項`,
+    text:'「精神又は身体に重度の障害を有するため、日常生活において常時の介護を必要とする状態にある在宅の二十歳未満の者（…）に障害児福祉手当を支給する。」',
+    manual:'特別障害者手当等支給事務の手引き\n　第3章「障害程度認定基準」\n　第2節「各障害の程度認定基準」',
+    related:[
+      `${LAW_REI} 第1条`,
+      `${NOTICE}`,
+      `${LAW_SHINTAI}`,
+      `${LAW_KYO}（精神・知的障害の等級参考）`
+    ],
+    notice:'昭和50年厚生省告示第263号「障害児福祉手当の支給に関する省令」'
   },
   child_combined: {
-    law: `${LAW} 第17条第1項`,
-    text: '（複数障害の重複による合算認定）',
-    manual: '特別障害者手当等支給事務の手引き<br>第3章第3節「二以上の障害がある場合の障害程度の認定」<br>別表1（併合認定表）',
-    notice: '昭和50年厚生省告示第263号'
+    result:'認定可能性：高（併合該当）',
+    allow:'障害児福祉手当',
+    article:`${LAW_MAIN} 第17条第1項`,
+    text:'（複数障害の重複による合算認定）',
+    manual:'特別障害者手当等支給事務の手引き\n　第3章第3節「二以上の障害がある場合の認定」\n　別表1（障害程度の併合認定表）',
+    related:[
+      `${LAW_REI} 第1条`,
+      `${NOTICE}（別表1）`,
+      `${LAW_SHINTAI}`,
+      `${LAW_KYO}`
+    ],
+    notice:'昭和50年厚生省告示第263号'
   },
   ineligible: {
-    law: `${LAW} 第26条の2第1項（または第17条第1項）`,
-    text: '常時特別な介護を必要とする状態（特別障害者手当）または常時の介護を必要とする状態（障害児福祉手当）に達していないと評価。',
-    manual: '特別障害者手当等支給事務の手引き<br>第3章「障害程度認定基準」',
-    notice: ''
+    result:'不該当（認定不可）',
+    allow:'',
+    article:`${LAW_MAIN} 第26条の2第1項（または第17条第1項）`,
+    text:'各障害の程度・ADL評価の結果、単独・併合いずれの認定基準にも達していないと評価されました。入力データが不完全な場合や症状変化の場合は窓口へご相談ください。',
+    manual:'特別障害者手当等支給事務の手引き\n　第3章「障害程度認定基準」',
+    related:[`${NOTICE}`],
+    notice:''
   }
 };
 
-function step5(wrap) {
-  const result = assess();
-  const isAdult = state.isAdult;
-  const allowance = isAdult ? '特別障害者手当' : '障害児福祉手当';
+function step5(wrap){
+  const res=assess();
+  const isAdult=state.isAdult;
+  let key;
+  if(res.result==='eligible_single')   key=isAdult?'adult_single':'child_single';
+  else if(res.result==='eligible_combined') key=isAdult?'adult_combined':'child_combined';
+  else key='ineligible';
+  const cit=CITS[key];
 
-  let citKey;
-  if (result.result==='eligible_single')   citKey = isAdult?'adult_single':'child_single';
-  else if (result.result==='eligible_combined') citKey = isAdult?'adult_combined':'child_combined';
-  else citKey = 'ineligible';
-  const cit = CITATIONS[citKey];
-
-  const banners = {
-    eligible_single: {
-      bg:'bg-emerald-50 border-2 border-emerald-400', icon:'✅',
-      chip:'text-emerald-600 bg-emerald-100', title:'text-emerald-700', sub:'単独該当（認定可能性：高）',
-      reason:`<strong>${DIS_LABELS[result.singleType]||''}</strong>が単独で認定基準（${isAdult?'1':'2'}級相当・常時${isAdult?'特別な':''}介護が必要な状態）を満たすと評価されました。`
-    },
-    eligible_combined: {
-      bg:'bg-blue-50 border-2 border-blue-400', icon:'🔵',
-      chip:'text-blue-600 bg-blue-100', title:'text-blue-700', sub:'併合該当（認定可能性：高）',
-      reason:'単独では基準に達しない障害が複数あります。手引き「別表1（併合認定表）」に基づき重複評価した結果、総合的に認定基準を満たすと評価されました。'
-    },
-    ineligible: {
-      bg:'bg-gray-50 border-2 border-gray-300', icon:'❌',
-      chip:'text-gray-500 bg-gray-200', title:'text-gray-600', sub:'不該当',
-      reason:'各障害の程度・ADL評価の結果、単独・併合いずれの認定基準にも達していないと評価されました。入力データが不完全な場合や状態の変化があれば、窓口へご相談ください。'
-    }
+  const banners={
+    eligible_single:{bg:'bg-emerald-50 border-2 border-emerald-400',icon:'✅',chip:'text-emerald-600 bg-emerald-100',col:'text-emerald-700'},
+    eligible_combined:{bg:'bg-blue-50 border-2 border-blue-400',icon:'🔵',chip:'text-blue-600 bg-blue-100',col:'text-blue-700'},
+    ineligible:{bg:'bg-gray-50 border-2 border-gray-300',icon:'❌',chip:'text-gray-500 bg-gray-200',col:'text-gray-600'}
   };
-  const b = banners[result.result];
+  const b=banners[res.result];
 
-  const gradeText = g => g===1?'1級相当（最重度）':g===2?'2級相当（重度）':'3級以下';
-  const gradeColor = g => g===1?'text-red-600 font-bold':g===2?'text-orange-500 font-bold':'text-gray-400';
+  const gTxt=g=>g===1?'1級相当（最重度）':g===2?'2級相当（重度）':'3級以下（中等度〜軽度）';
+  const gCol=g=>g===1?'text-red-600 font-bold':g===2?'text-orange-500 font-bold':'text-gray-400';
 
-  const adlFilled = state.disabilities.includes('limb') && state.details.limb.adl.every(v=>v!=='');
-  const adlSum = adlFilled ? state.details.limb.adl.reduce((a,v)=>a+parseInt(v),0) : null;
+  const adlOk=state.disabilities.includes('limb')&&state.details.limb.adl.every(v=>v!=='');
+  const adlSum=adlOk?state.details.limb.adl.reduce((a,v)=>a+parseInt(v),0):null;
 
-  const d = document.createElement('div');
-  d.className = 'fade-in space-y-4';
-  d.innerHTML = `
+  const el=document.createElement('div');
+  el.className='fade-in space-y-4';
+  el.innerHTML=`
     <div class="text-center">
       <span class="inline-block bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full">
-        対象手当：${allowance}（${state.age}歳）
+        ⑤ 判定結果 ─ ${cit.allow||'対象外'}（申請者年齢 ${state.age}歳）
       </span>
     </div>
 
     <div class="${b.bg} rounded-2xl p-6">
       <div class="text-center mb-4">
         <div class="text-5xl mb-2">${b.icon}</div>
-        <span class="text-xs font-bold px-3 py-1 rounded-full ${b.chip}">${b.sub}</span>
-        <h2 class="text-xl font-extrabold ${b.title} mt-2">⑤ 判定結果</h2>
+        <span class="text-xs font-bold px-3 py-1 rounded-full ${b.chip}">${cit.result}</span>
       </div>
       <div class="bg-white rounded-xl p-4 text-sm">
         <p class="font-bold text-gray-800 mb-1">判定理由</p>
-        <p class="text-gray-700">${b.reason}</p>
+        <p class="text-gray-700">${cit.text}</p>
       </div>
     </div>
 
     <div class="bg-white rounded-2xl shadow p-5">
-      <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-        <span class="text-blue-600">📋</span> 法令・手引き根拠
-      </h3>
+      <h3 class="font-bold text-gray-800 mb-4">📋 法令・手引き根拠（章・節・条文）</h3>
       <div class="space-y-3 text-sm">
-        <div class="rounded-xl p-3 bg-blue-50">
+
+        <div class="rounded-xl p-4 bg-blue-50">
           <p class="text-xs text-blue-500 font-bold mb-1">根拠法令・条項</p>
-          <p class="text-gray-800 font-medium text-sm">${cit.law}</p>
+          <p class="text-gray-800 font-medium text-sm leading-relaxed">${cit.article}</p>
         </div>
-        <div class="rounded-xl p-3 bg-gray-50">
+
+        <div class="rounded-xl p-4 bg-gray-50">
           <p class="text-xs text-gray-500 font-bold mb-1">条文（要旨）</p>
           <p class="text-gray-700 text-xs leading-relaxed">${cit.text}</p>
         </div>
-        <div class="rounded-xl p-3 bg-green-50">
-          <p class="text-xs text-green-600 font-bold mb-1">適用箇所（手引き）</p>
-          <p class="text-gray-700 text-xs leading-relaxed">${cit.manual}</p>
+
+        <div class="rounded-xl p-4 bg-green-50">
+          <p class="text-xs text-green-600 font-bold mb-1">適用箇所（手引き 章・節）</p>
+          <pre class="text-gray-700 text-xs leading-relaxed whitespace-pre-wrap font-sans">${cit.manual}</pre>
         </div>
-        ${cit.notice ? `
-        <div class="rounded-xl p-3 bg-yellow-50">
+
+        <div class="rounded-xl p-4 bg-indigo-50">
+          <p class="text-xs text-indigo-600 font-bold mb-2">関連法令・通知</p>
+          <ul class="space-y-1">
+            ${cit.related.map(r=>`<li class="text-xs text-gray-700 leading-relaxed">・ ${r}</li>`).join('')}
+          </ul>
+        </div>
+
+        ${cit.notice?`
+        <div class="rounded-xl p-4 bg-yellow-50">
           <p class="text-xs text-yellow-600 font-bold mb-1">関連告示</p>
-          <p class="text-gray-700 text-xs">${cit.notice}</p>
-        </div>` : ''}
-        <div class="rounded-xl p-3 bg-slate-50">
-          <p class="text-xs text-slate-500 font-bold mb-1">除外条件（参考）</p>
-          <p class="text-gray-600 text-xs leading-relaxed">
-            施設入所：同法 第26条の2第2項第1号（障害児は第18条第2項第1号）<br>
-            長期入院：同法 第26条の2第2項第2号（継続して3月を超える入院）
-          </p>
+          <p class="text-xs text-gray-700">${cit.notice}</p>
+        </div>`:''}
+
+        <div class="rounded-xl p-4 bg-slate-50">
+          <p class="text-xs text-slate-500 font-bold mb-2">除外条件（参考条文）</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <li>・ 施設入所：${LAW_MAIN} 第26条の2第2項第1号</li>
+            <li>・ 長期入院：同法 第26条の2第2項第2号（継続して3月を超える入院）</li>
+            <li>・ 障害児の場合：同法 第18条第2項に準用</li>
+          </ul>
         </div>
       </div>
     </div>
 
     <div class="bg-white rounded-2xl shadow p-5">
-      <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
-        <span class="text-orange-500">📊</span> 各障害の評価サマリー
-      </h3>
-      ${Object.entries(result.grades).map(([k,g]) => `
+      <h3 class="font-bold text-gray-800 mb-3">📊 各障害の評価サマリー</h3>
+      ${Object.entries(res.grades).map(([k,g])=>`
         <div class="flex justify-between items-center py-2.5 border-b border-gray-100 last:border-0 text-sm">
           <span class="text-gray-600">${DIS_LABELS[k]||k}</span>
-          <span class="${gradeColor(g)}">${gradeText(g)}</span>
-        </div>
-      `).join('')}
-      ${adlSum!==null ? `
+          <span class="${gCol(g)}">${gTxt(g)}</span>
+        </div>`).join('')}
+      ${adlSum!==null?`
         <div class="mt-3 bg-orange-50 rounded-lg p-3 text-xs text-orange-800">
-          肢体ADL合計：<strong>${adlSum}/28点</strong>
-          （≦10→1級相当 / 11〜17→2級相当 / ≧18→3級以下）
-        </div>` : ''}
+          肢体ADL合計：<strong>${adlSum}/28点</strong>（≦10→1級相当 / 11〜17→2級相当 / ≧18→3級以下）
+        </div>`:''}
     </div>
 
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
       <strong>⚠ 注意事項</strong><br>
-      この判定は簡易的な目安であり、行政の認定処分に代わるものではありません。
+      この判定は厚生労働省の手引きに基づく簡易的な目安であり、行政の認定処分に代わるものではありません。
       実際の支給決定は医師の診断書と市区町村（障害福祉課等）での審査によります。
-      結果にかかわらず窓口へのご相談をお勧めします。
+      判定結果にかかわらず窓口へのご相談をお勧めします。
     </div>
 
-    <button id="btn_restart" class="w-full border-2 border-blue-400 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-50 transition">
+    <button id="btn_r" class="w-full border-2 border-blue-400 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-50 transition">
       最初からやり直す
-    </button>
-  `;
-  wrap.appendChild(d);
+    </button>`;
+  wrap.appendChild(el);
 }
 
 // ─── 除外画面 ──────────────────────────────────────────
-function disqualifiedScreen() {
-  const isFac = state.disqualifyReason.includes('施設');
-  const d = document.createElement('div');
-  d.className = 'bg-white rounded-2xl shadow-lg p-6 fade-in';
-  d.innerHTML = `
-    <div class="text-center py-4">
-      <div class="text-6xl mb-4">🚫</div>
-      <h2 class="text-xl font-extrabold text-red-600 mb-3">支給対象外</h2>
-      <p class="text-gray-700 mb-5">${state.disqualifyReason}</p>
-      <div class="bg-gray-50 rounded-xl p-4 text-sm text-left mb-6">
-        <p class="font-bold text-gray-800 mb-2">根拠条文</p>
-        <p class="text-xs text-gray-600 leading-relaxed">
-          ${LAW}<br>
-          <strong>${isFac?'第26条の2第2項第1号':'第26条の2第2項第2号'}</strong><br>
-          （障害児福祉手当は同法第18条第2項に準用）<br><br>
-          特別障害者手当等支給事務の手引き 第2章「支給要件」
-        </p>
-      </div>
-      <button id="btn_restart" class="border-2 border-red-400 text-red-600 font-bold py-2 px-8 rounded-xl hover:bg-red-50 transition">
-        最初からやり直す
-      </button>
-    </div>`;
+function disqScreen(){
+  const isFac=state.disqualifyReason.includes('施設');
+  const d=document.createElement('div');
+  d.className='bg-white rounded-2xl shadow-lg p-6 fade-in';
+  d.innerHTML=`<div class="text-center py-4">
+    <div class="text-6xl mb-4">🚫</div>
+    <h2 class="text-xl font-extrabold text-red-600 mb-3">支給対象外（不該当終了）</h2>
+    <p class="text-gray-700 mb-5">${state.disqualifyReason}</p>
+    <div class="bg-gray-50 rounded-xl p-4 text-sm text-left mb-6">
+      <p class="font-bold text-gray-800 mb-2">根拠条文</p>
+      <p class="text-xs text-gray-600 leading-relaxed">
+        ${LAW_MAIN}<br>
+        <strong>${isFac?'第26条の2第2項第1号':'第26条の2第2項第2号'}</strong>
+        （障害児は同法第18条第2項に準用）<br><br>
+        特別障害者手当等支給事務の手引き 第2章「支給要件」
+      </p>
+    </div>
+    <button id="btn_r" class="border-2 border-red-400 text-red-600 font-bold py-2 px-8 rounded-xl hover:bg-red-50 transition">
+      最初からやり直す
+    </button>
+  </div>`;
   return d;
 }
 
 // ═══════════════════════════════════════════════════════
 // EVENT BINDING
 // ═══════════════════════════════════════════════════════
-function bindSel(id, fn) { const e=document.getElementById(id); if(e) e.addEventListener('change',ev=>fn(ev.target.value)); }
-function bindNum(id, fn) { const e=document.getElementById(id); if(e) e.addEventListener('input',ev=>fn(ev.target.value)); }
-function bindTxt(id, fn) { const e=document.getElementById(id); if(e) e.addEventListener('input',ev=>fn(ev.target.value)); }
+function bSel(id,fn){const e=document.getElementById(id);if(e)e.addEventListener('change',ev=>fn(ev.target.value));}
+function bNum(id,fn){const e=document.getElementById(id);if(e)e.addEventListener('input',ev=>fn(ev.target.value));}
+function bTxt(id,fn){const e=document.getElementById(id);if(e)e.addEventListener('input',ev=>fn(ev.target.value));}
 
-function updateRadio(name, cls) {
-  const on=cls==='orange'?['border-orange-400','bg-orange-50','text-orange-700']:
-           cls==='purple'?['border-purple-400','bg-purple-50','text-purple-700']:
-           ['border-blue-400','bg-blue-50','text-blue-700'];
-  document.querySelectorAll(`input[name="${name}"]`).forEach(i => {
-    const lbl=i.closest('label');
-    if(i.checked){on.forEach(c=>lbl.classList.add(c));lbl.classList.remove('border-gray-200','text-gray-600');}
-    else{on.forEach(c=>lbl.classList.remove(c));lbl.classList.add('border-gray-200','text-gray-600');}
+function updRadio(name,oc,ua){
+  document.querySelectorAll(`input[name="${name}"]`).forEach(i=>{
+    const l=i.closest('label');
+    if(i.checked){oc.forEach(c=>l.classList.add(c));ua.forEach(c=>l.classList.remove(c));}
+    else{oc.forEach(c=>l.classList.remove(c));ua.forEach(c=>l.classList.add(c));}
   });
 }
+const ORG=['border-orange-400','bg-orange-50','text-orange-700'],PRP=['border-purple-400','bg-purple-50','text-purple-700'];
+const OFF=['border-gray-200','text-gray-600'];
 
-function bindEvents() {
+function bindEvents(){
   // ①
   const b1=document.getElementById('btn1');
-  if(b1) b1.addEventListener('click',()=>{
-    const fac=document.getElementById('chk_facility').checked;
-    const hos=document.getElementById('chk_hospital').checked;
-    if(fac){state.disqualified=true;state.disqualifyReason='施設入所者は手当の支給対象外です。';renderApp();}
-    else if(hos){state.disqualified=true;state.disqualifyReason='3ヶ月を超えて入院している方は手当の支給対象外です。';renderApp();}
+  if(b1)b1.addEventListener('click',()=>{
+    const f=document.getElementById('chk_f').checked,h=document.getElementById('chk_h').checked;
+    if(f){state.disqualified=true;state.disqualifyReason='施設入所者は手当の支給対象外です。';renderApp();}
+    else if(h){state.disqualified=true;state.disqualifyReason='3ヶ月を超えて入院している方は手当の支給対象外です。';renderApp();}
     else goStep(2);
   });
 
   // ②
   const b2=document.getElementById('btn2');
-  if(b2) b2.addEventListener('click',()=>{
-    const age=parseInt(document.getElementById('age_input').value);
-    if(isNaN(age)||age<0||age>120){alert('有効な年齢を入力してください。');return;}
-    state.age=age; state.isAdult=age>=20; goStep(3);
+  if(b2)b2.addEventListener('click',()=>{
+    const a=parseInt(document.getElementById('age_in').value);
+    if(isNaN(a)||a<0||a>120){alert('有効な年齢を入力してください。');return;}
+    state.age=a;state.isAdult=a>=20;goStep(3);
   });
 
   // ③
@@ -996,15 +1288,26 @@ function bindEvents() {
     });
   });
   const b3=document.getElementById('btn3');
-  if(b3) b3.addEventListener('click',()=>{
-    if(!state.disabilities.length){alert('障害区分を1つ以上選択してください。');return;} goStep(4);
+  if(b3)b3.addEventListener('click',()=>{
+    if(!state.disabilities.length){alert('障害区分を1つ以上選択してください。');return;}goStep(4);
   });
 
   // ④ 肢体
-  bindSel('limb_grade', v=>state.details.limb.grade=v);
-  bindSel('limb_vent',  v=>state.details.limb.ventilator=v);
-  bindSel('limb_tube',  v=>state.details.limb.tubeFeed=v);
-  bindSel('limb_suction',v=>state.details.limb.suction=v);
+  bTxt('limb_disease',v=>state.details.limb.disease=v);
+  bTxt('limb_onset',v=>state.details.limb.onset=v);
+  bSel('limb_grade',v=>state.details.limb.grade=v);
+  bSel('limb_fixed',v=>state.details.limb.fixed=v);
+  bSel('limb_mob_in',v=>state.details.limb.mobilityIndoor=v);
+  bSel('limb_mob_out',v=>state.details.limb.mobilityOutdoor=v);
+  bSel('limb_sit',v=>state.details.limb.sittingBalance=v);
+  bSel('limb_mmt_ra',v=>state.details.limb.mmtRightArm=v);
+  bSel('limb_mmt_la',v=>state.details.limb.mmtLeftArm=v);
+  bSel('limb_mmt_rl',v=>state.details.limb.mmtRightLeg=v);
+  bSel('limb_mmt_ll',v=>state.details.limb.mmtLeftLeg=v);
+  bSel('limb_vent',v=>state.details.limb.ventilator=v);
+  bSel('limb_tube',v=>state.details.limb.tubeFeed=v);
+  bSel('limb_suc',v=>state.details.limb.suction=v);
+  bSel('limb_iv',v=>state.details.limb.ivDrip=v);
 
   document.querySelectorAll('.limb-part').forEach(c=>{
     c.addEventListener('change',e=>{
@@ -1019,36 +1322,60 @@ function bindEvents() {
       const k=e.target.dataset.key;
       if(e.target.checked){if(!state.details.limb.aids.includes(k))state.details.limb.aids.push(k);}
       else state.details.limb.aids=state.details.limb.aids.filter(a=>a!==k);
-      const lbl=e.target.closest('label');
-      e.target.checked?lbl.classList.add('border-orange-400','bg-orange-50'):lbl.classList.remove('border-orange-400','bg-orange-50');
+      const l=e.target.closest('label');
+      e.target.checked?l.classList.add('border-orange-400','bg-orange-50'):l.classList.remove('border-orange-400','bg-orange-50');
     });
   });
   document.querySelectorAll('.pf-radio').forEach(r=>{
     r.addEventListener('change',e=>{
       state.details.limb.partFunc[e.target.dataset.part]=e.target.value;
-      updateRadio(`pf_${e.target.dataset.part}`,'orange');
+      updRadio(`pf_${e.target.dataset.part}`,ORG,OFF);
     });
   });
-  document.querySelectorAll('.adl-radio').forEach(r=>{
+  document.querySelectorAll('.adl-r').forEach(r=>{
     r.addEventListener('change',e=>{
       state.details.limb.adl[parseInt(e.target.dataset.idx)]=parseInt(e.target.value);
-      updateRadio(`adl_${e.target.dataset.idx}`,'orange');
+      updRadio(`adl_${e.target.dataset.idx}`,ORG,OFF);
     });
   });
 
   // ④ 視覚
-  bindNum('vision_right',v=>state.details.vision.rightVision=v);
-  bindNum('vision_left', v=>state.details.vision.leftVision=v);
-  bindSel('vision_field',v=>state.details.vision.visualField=v);
-  bindSel('vision_light',v=>state.details.vision.lightPerception=v);
-  bindTxt('vision_disease',v=>state.details.vision.eyeDisease=v);
+  bTxt('vis_disease',v=>state.details.vision.disease=v);
+  bTxt('vis_onset',v=>state.details.vision.onset=v);
+  bSel('vis_grade',v=>state.details.vision.grade=v);
+  bSel('vis_prog',v=>state.details.vision.progressive=v);
+  bNum('vis_r',v=>state.details.vision.rightVision=v);
+  bNum('vis_l',v=>state.details.vision.leftVision=v);
+  bNum('vis_r_raw',v=>state.details.vision.rightVisionRaw=v);
+  bNum('vis_l_raw',v=>state.details.vision.leftVisionRaw=v);
+  bSel('vis_field',v=>state.details.vision.visualField=v);
+  bNum('vis_rf',v=>state.details.vision.rightFieldDeg=v);
+  bNum('vis_lf',v=>state.details.vision.leftFieldDeg=v);
+  bSel('vis_light',v=>state.details.vision.lightPerception=v);
+  bSel('vis_scotoma',v=>state.details.vision.centralScotoma=v);
+  bSel('vis_color',v=>state.details.vision.colorVision=v);
+  bSel('vis_aid',v=>state.details.vision.visualAid=v);
 
   // ④ 聴覚
-  bindNum('hear_right',  v=>state.details.hearing.rightDb=v);
-  bindNum('hear_left',   v=>state.details.hearing.leftDb=v);
-  bindNum('hear_disc',   v=>state.details.hearing.speechDisc=v);
-  bindSel('hear_aid',    v=>state.details.hearing.hearingAid=v);
-  bindSel('hear_balance',v=>state.details.hearing.balanceDisorder=v);
+  bTxt('hear_disease',v=>state.details.hearing.disease=v);
+  bTxt('hear_onset',v=>state.details.hearing.onset=v);
+  bSel('hear_grade',v=>state.details.hearing.grade=v);
+  bSel('hear_type',v=>state.details.hearing.type=v);
+  bNum('hear_r500',v=>state.details.hearing.right500=v);
+  bNum('hear_r1000',v=>state.details.hearing.right1000=v);
+  bNum('hear_r2000',v=>state.details.hearing.right2000=v);
+  bNum('hear_r4000',v=>state.details.hearing.right4000=v);
+  bNum('hear_l500',v=>state.details.hearing.left500=v);
+  bNum('hear_l1000',v=>state.details.hearing.left1000=v);
+  bNum('hear_l2000',v=>state.details.hearing.left2000=v);
+  bNum('hear_l4000',v=>state.details.hearing.left4000=v);
+  bNum('hear_r',v=>state.details.hearing.rightDb=v);
+  bNum('hear_l',v=>state.details.hearing.leftDb=v);
+  bNum('hear_disc',v=>state.details.hearing.speechDisc=v);
+  bSel('hear_ci',v=>state.details.hearing.cochlearImplant=v);
+  bSel('hear_aid',v=>state.details.hearing.hearingAid=v);
+  bSel('hear_bal',v=>state.details.hearing.balanceDisorder=v);
+  bSel('hear_mann',v=>state.details.hearing.balanceMann=v);
 
   // ④ 精神
   document.querySelectorAll('.mental-type').forEach(c=>{
@@ -1059,14 +1386,23 @@ function bindEvents() {
       renderApp();
     });
   });
-  bindSel('it_grade',  v=>state.details.mental.itGrade=v);
-  bindNum('mental_iq', v=>state.details.mental.iq=v);
-  bindTxt('mental_iqtest',v=>state.details.mental.iqTestName=v);
-  bindSel('psh_grade', v=>state.details.mental.pshGrade=v);
-  document.querySelectorAll('.madl-radio').forEach(r=>{
+  bTxt('men_disease',v=>state.details.mental.disease=v);
+  bTxt('men_onset',v=>state.details.mental.onset=v);
+  bSel('it_grade',v=>state.details.mental.itGrade=v);
+  bNum('men_iq',v=>state.details.mental.iq=v);
+  bTxt('men_iqt',v=>state.details.mental.iqTestName=v);
+  bSel('men_adapt',v=>state.details.mental.adaptiveBehavior=v);
+  bSel('psh_grade',v=>state.details.mental.pshGrade=v);
+  bNum('men_mmse',v=>state.details.mental.mmse=v);
+  bNum('men_hdsr',v=>state.details.mental.hdsr=v);
+  bSel('men_cdr',v=>state.details.mental.cdr=v);
+  bSel('men_bd',v=>state.details.mental.behaviorDisorder=v);
+  bSel('men_comm',v=>state.details.mental.communication=v);
+  bSel('men_si',v=>state.details.mental.selfInjury=v);
+  document.querySelectorAll('.madl-r').forEach(r=>{
     r.addEventListener('change',e=>{
       state.details.mental.mentalAdl[parseInt(e.target.dataset.idx)]=parseInt(e.target.value);
-      updateRadio(`madl_${e.target.dataset.idx}`,'purple');
+      updRadio(`madl_${e.target.dataset.idx}`,PRP,OFF);
     });
   });
 
@@ -1079,36 +1415,44 @@ function bindEvents() {
       renderApp();
     });
   });
-  bindSel('heart_nyha',v=>state.details.internal.heart.nyha=v);
-  bindSel('heart_pm',  v=>state.details.internal.heart.pacemaker=v);
-  bindNum('heart_bnp', v=>state.details.internal.heart.bnp=v);
-  bindNum('heart_ef',  v=>state.details.internal.heart.ef=v);
-  bindSel('kidney_dialysis',v=>state.details.internal.kidney.dialysis=v);
-  bindNum('kidney_egfr',v=>state.details.internal.kidney.egfr=v);
-  bindNum('kidney_cr', v=>state.details.internal.kidney.creatinine=v);
-  bindSel('resp_hfo',  v=>state.details.internal.respiratory.hfo=v);
-  bindNum('resp_vc',   v=>state.details.internal.respiratory.vcPercent=v);
-  bindNum('resp_fev',  v=>state.details.internal.respiratory.fev1=v);
-  bindNum('resp_pao2', v=>state.details.internal.respiratory.pao2=v);
-  bindSel('liver_cp',  v=>state.details.internal.liver.childPugh=v);
-  bindSel('liver_asc', v=>state.details.internal.liver.ascites=v);
-  bindSel('liver_enc', v=>state.details.internal.liver.encephalopathy=v);
-  bindNum('liver_alb', v=>state.details.internal.liver.albumin=v);
-  bindSel('bladder_stoma',v=>state.details.internal.bladder.stoma=v);
-  bindSel('bladder_cath', v=>state.details.internal.bladder.catheter=v);
-  bindSel('int_tpn',   v=>state.details.internal.intestine.tpn=v);
-  bindSel('int_tube',  v=>state.details.internal.intestine.tube=v);
+  const ib=(id,path)=>{const[sec,key]=path.split('.');bSel(id,v=>state.details.internal[sec][key]=v);};
+  const ibn=(id,path)=>{const[sec,key]=path.split('.');bNum(id,v=>state.details.internal[sec][key]=v);};
+  const ibt=(id,path)=>{const[sec,key]=path.split('.');bTxt(id,v=>state.details.internal[sec][key]=v);};
+  // 心臓
+  ibt('h_disease','heart.disease');ib('h_nyha','heart.nyha');ibt('h_arr','heart.arrhythmia');
+  ib('h_pm','heart.pacemaker');ibn('h_bnp','heart.bnp');ibn('h_ef','heart.ef');ibn('h_6mwt','heart.sixMwt');
+  // 腎臓
+  ibt('k_disease','kidney.disease');ib('k_dial','kidney.dialysis');ibn('k_freq','kidney.dialysisFreq');
+  ibn('k_egfr','kidney.egfr');ibn('k_cr','kidney.creatinine');ibn('k_bun','kidney.bun');
+  ib('k_prot','kidney.proteinuria');ib('k_edema','kidney.edema');
+  // 呼吸器
+  ibt('r_disease','respiratory.disease');ib('r_hfo','respiratory.hfo');ib('r_hmv','respiratory.hmv');
+  ibn('r_flow','respiratory.hfoFlow');ibn('r_vc','respiratory.vcPercent');ibn('r_fev','respiratory.fev1');
+  ibn('r_pao2','respiratory.pao2');ibn('r_paco2','respiratory.paco2');ibn('r_spo2','respiratory.spo2');
+  // 肝臓
+  ibt('l_disease','liver.disease');ib('l_cp','liver.childPugh');ibn('l_alb','liver.albumin');
+  ibn('l_ptr','liver.ptInr');ibn('l_tbil','liver.tbil');ib('l_asc','liver.ascites');
+  ib('l_enc','liver.encephalopathy');ib('l_jau','liver.jaundice');
+  // 膀胱
+  ibt('b_disease','bladder.disease');ib('b_stoma','bladder.stomaType');
+  ib('b_cath','bladder.catheter');ib('b_inco','bladder.incontinence');
+  // 小腸
+  ibt('i_disease','intestine.disease');ib('i_tpn','intestine.tpn');
+  ib('i_tube','intestine.tube');ibt('i_res','intestine.resectionRange');
+  // 免疫
+  ibt('im_disease','immune.disease');ibn('im_cd4','immune.cd4');
+  ibn('im_vl','immune.viralLoad');ib('im_art','immune.artTherapy');ib('im_oi','immune.opportunistic');
 
   const b4=document.getElementById('btn4');
-  if(b4) b4.addEventListener('click',()=>{
+  if(b4)b4.addEventListener('click',()=>{
     if(state.disabilities.includes('limb')&&!state.details.limb.grade){alert('肢体不自由の手帳等級を選択してください。');return;}
     if(state.disabilities.includes('mental')&&!state.details.mental.disType.length){alert('精神・知的障害の「障害種別」を選択してください。');return;}
     if(state.disabilities.includes('internal')&&!state.details.internal.subtypes.length){alert('内部障害の「種別」を選択してください。');return;}
     goStep(5);
   });
 
-  const br=document.getElementById('btn_restart');
-  if(br) br.addEventListener('click',()=>{state=initState();renderApp();});
+  const br=document.getElementById('btn_r');
+  if(br)br.addEventListener('click',()=>{state=initState();renderApp();});
 }
 
 // ═══════════════════════════════════════════════════════
