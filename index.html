@@ -89,7 +89,31 @@ const initState = () => ({
       mmtRightArm:'',mmtLeftArm:'',mmtRightLeg:'',mmtLeftLeg:'',
       // ⑫ 日常生活動作評価表（17項目）○/△/×
       adlNoAid:  Array(17).fill(''),  // 補助具なし
-      adlWithAid: Array(17).fill('')  // 補助具あり
+      adlWithAid: Array(17).fill(''), // 補助具あり
+      // ⑦ 自動域ROM（Active ROM）— 診断書 様式第11号 他動域と並列
+      romShoulderFlexActiveR:'',romShoulderFlexActiveL:'',
+      romShoulderExtActiveR:'',romShoulderExtActiveL:'',
+      romShoulderAbdActiveR:'',romShoulderAbdActiveL:'',
+      romElbowFlexActiveR:'',romElbowFlexActiveL:'',
+      romElbowExtActiveR:'',romElbowExtActiveL:'',
+      romWristFlexActiveR:'',romWristFlexActiveL:'',
+      romWristExtActiveR:'',romWristExtActiveL:'',
+      romHipFlexActiveR:'',romHipFlexActiveL:'',
+      romHipExtActiveR:'',romHipExtActiveL:'',
+      romHipAbdActiveR:'',romHipAbdActiveL:'',
+      romKneeFlexActiveR:'',romKneeFlexActiveL:'',
+      romAnkleFlexActiveR:'',romAnkleFlexActiveL:'',
+      romAnkleExtActiveR:'',romAnkleExtActiveL:'',
+      // 欠損高位（政令別表第2第4号：両大腿1/2以上欠損 の判定に使用）
+      ampLevelRightArm:'',ampLevelLeftArm:'',
+      ampLevelRightLeg:'',ampLevelLeftLeg:'',
+      // 手指全廃（政令別表第2第3号：両上肢全指全廃 の判定に使用）
+      allFingersRightLost:'',allFingersLeftLost:'',
+      // 筋緊張（Modified Ashworth Scale: 0/1/1+/2/3/4）
+      spasticityRightArm:'',spasticityLeftArm:'',
+      spasticityRightLeg:'',spasticityLeftLeg:'',
+      // バビンスキー反射（左右別）
+      babinskiL:''
     },
 
     // ─── 視覚障害（身体障害者診断書・意見書 視覚障害用）
@@ -308,6 +332,20 @@ function updateBodyDiagram(){
   if(selectedZone)renderZonePanel();
 }
 
+// 各部位の切断高位選択肢（政令別表第2第3・4号判定用）
+const AMP_LEVELS = {
+  rightArm:['手根骨以下欠損','手関節離断','前腕1/2以下欠損','前腕1/2以上欠損','肘関節離断','上腕1/2以下欠損','上腕1/2以上欠損','肩関節離断'],
+  leftArm: ['手根骨以下欠損','手関節離断','前腕1/2以下欠損','前腕1/2以上欠損','肘関節離断','上腕1/2以下欠損','上腕1/2以上欠損','肩関節離断'],
+  rightLeg:['足根骨以下欠損','足関節離断','下腿1/2以下欠損','下腿1/2以上欠損','膝関節離断','大腿1/2以下欠損','大腿1/2以上','股関節離断','骨盤切断'],
+  leftLeg: ['足根骨以下欠損','足関節離断','下腿1/2以下欠損','下腿1/2以上欠損','膝関節離断','大腿1/2以下欠損','大腿1/2以上','股関節離断','骨盤切断'],
+  trunk:[]
+};
+
+function setAmpLevel(part, level) {
+  const key = 'ampLevel' + part.charAt(0).toUpperCase() + part.slice(1);
+  state.details.limb[key] = level;
+}
+
 function renderZonePanel(){
   const panel=document.getElementById('zone-panel');
   if(!panel)return;
@@ -317,6 +355,10 @@ function renderZonePanel(){
   }
   const pName=LIMB_PARTS[selectedZone];
   const current=state.details.limb.partFunc[selectedZone];
+  const ampKey='ampLevel'+selectedZone.charAt(0).toUpperCase()+selectedZone.slice(1);
+  const ampLevel=state.details.limb[ampKey]||'';
+  const ampOpts=AMP_LEVELS[selectedZone]||[];
+
   panel.innerHTML=`
     <p class="text-sm font-bold text-gray-700 mb-3 select-none">▶ ${pName}の機能状態を選択</p>
     <div class="grid grid-cols-2 gap-2 mb-2">
@@ -328,9 +370,18 @@ function renderZonePanel(){
           ${level}
         </button>`).join('')}
     </div>
+    ${current==='欠損'&&ampOpts.length?`
+    <div class="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+      <p class="text-xs font-bold text-gray-600 mb-1">切断高位（政令別表第2第3・4号の判定に使用）</p>
+      <select onchange="setAmpLevel('${selectedZone}',this.value)"
+        class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-1 focus:ring-orange-400 outline-none bg-white">
+        <option value="">── 高位を選択 ──</option>
+        ${ampOpts.map(l=>`<option value="${l}" ${ampLevel===l?'selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>`:''}
     <button ontouchend="event.preventDefault();setZoneLevel('${selectedZone}','')"
       onclick="setZoneLevel('${selectedZone}','')"
-      class="w-full py-2 text-xs text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 select-none">
+      class="w-full mt-2 py-2 text-xs text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 select-none">
       この部位の選択を解除
     </button>`;
 }
@@ -362,13 +413,13 @@ function setAdl(col, idx, mark) {
     const el = document.getElementById('adl-total');
     if (el) {
       el.textContent = `合計 ${total} 点`;
-      el.className = `font-bold text-sm ${total>=22?'text-red-600':total>=10?'text-orange-600':'text-gray-600'}`;
+      el.className = `font-bold text-sm ${total>=10?'text-orange-600':'text-gray-600'}`;
     }
     const bar = document.getElementById('adl-bar');
     if (bar) {
       const pct = Math.min(100, Math.round(total/34*100));
       bar.style.width = pct+'%';
-      bar.className = `h-full rounded-full transition-all ${total>=22?'bg-red-500':total>=10?'bg-orange-500':'bg-green-500'}`;
+      bar.className = `h-full rounded-full transition-all ${total>=10?'bg-orange-500':'bg-green-500'}`;
     }
   }
 }
@@ -538,33 +589,90 @@ const INTERNAL_SUBTYPES = {
 // ═══════════════════════════════════════════════════════
 function gradeLimb() {
   const d = state.details.limb;
-  // 人工呼吸器使用 → 政令別表第2第1号（最重度）
-  if (d.ventilator === 'あり') return {grade:1,adlTotal:null,adlFilled:0,reason:'人工呼吸器使用 → 政令別表第2第1号（最重度）に相当'};
 
-  // 17項目ADL評価（補助具なし列）
+  // ── 1. 人工呼吸器使用 → 体幹機能全廃相当（最重度確実）
+  if (d.ventilator === 'あり')
+    return {grade:1, adlTotal:null, adlFilled:0,
+      reason:'人工呼吸器使用 → 体幹機能全廃に相当',
+      basis:'政令別表第2第5号（体幹の機能に著しい障害を有するもの）に準じる'};
+
+  const parts = d.parts;
+  const func  = d.partFunc;
+  const isHeavy = f => f==='欠損'||f==='運動麻痺';
+  const hasP    = p => parts.includes(p);
+  const isH     = p => isHeavy(func[p]);
+
+  // ── 2. 政令別表第2各号への該当判定
+  // 第1号: 両上肢の機能を全廃したもの
+  if (hasP('rightArm')&&hasP('leftArm')&&isH('rightArm')&&isH('leftArm'))
+    return {grade:1, adlTotal:null, adlFilled:0,
+      reason:'両上肢の機能を全廃',
+      basis:'政令別表第2第1号（両上肢の機能を全廃したもの）'};
+
+  // 第2号: 両下肢の機能を全廃したもの
+  if (hasP('rightLeg')&&hasP('leftLeg')&&isH('rightLeg')&&isH('leftLeg'))
+    return {grade:1, adlTotal:null, adlFilled:0,
+      reason:'両下肢の機能を全廃',
+      basis:'政令別表第2第2号（両下肢の機能を全廃したもの）'};
+
+  // 第3号: 両上肢の全ての指を全廃したもの
+  if (d.allFingersRightLost==='yes'&&d.allFingersLeftLost==='yes')
+    return {grade:1, adlTotal:null, adlFilled:0,
+      reason:'両上肢の全指を全廃',
+      basis:'政令別表第2第3号（両上肢の全ての指を全廃したもの）'};
+
+  // 第4号: 両下肢を大腿1/2以上で欠くもの（切断高位から判定）
+  const bigAmpLevels = ['大腿1/2以上','股関節離断','骨盤切断'];
+  const bigAmpR = func['rightLeg']==='欠損'&&bigAmpLevels.includes(d.ampLevelRightLeg);
+  const bigAmpL = func['leftLeg']==='欠損'&&bigAmpLevels.includes(d.ampLevelLeftLeg);
+  if (bigAmpR&&bigAmpL)
+    return {grade:1, adlTotal:null, adlFilled:0,
+      reason:`両大腿1/2以上欠損（右:${d.ampLevelRightLeg}・左:${d.ampLevelLeftLeg}）`,
+      basis:'政令別表第2第4号（両下肢を大腿の2分の1以上で欠くもの）'};
+
+  // 第5号: 体幹の機能に著しい障害を有するもの
+  if (hasP('trunk')&&isH('trunk'))
+    return {grade:1, adlTotal:null, adlFilled:0,
+      reason:'体幹の機能に著しい障害',
+      basis:'政令別表第2第5号（体幹の機能に著しい障害を有するもの）'};
+
+  // ── 3. 手帳等級1〜2（別表第2号の該当が明示できない場合の補完）
+  const g = parseInt(d.grade)||0;
+  if (g===1||g===2)
+    return {grade:1, adlTotal:null, adlFilled:0,
+      reason:`手帳${g}級（最重度相当、別表第2号の詳細確認を要する）`,
+      basis:'政令別表第2各号（部位・機能の組合せにより該当号を確認してください）'};
+
+  // ── 4. ADL評価（補助具なし） — 重複障害の第2号ルート候補として使用
   const adlFilled = d.adlNoAid.filter(v=>v!=='').length;
-  const adlTotal  = adlFilled>0 ? d.adlNoAid.reduce((s,v)=>s+(v===''?0:v==='○'?0:v==='△'?1:2),0) : null;
+  const adlTotal  = adlFilled>0
+    ? d.adlNoAid.reduce((s,v)=>s+(v===''?0:v==='○'?0:v==='△'?1:2),0)
+    : null;
 
-  if (adlFilled >= 10) { // 半数以上入力があれば評価に使用
-    const g = adlTotal >= 22 ? 1 : adlTotal >= 10 ? 2 : 3;
-    const reason = `ADL評価表（17項目・補助具なし）合計 ${adlTotal}点 → ${g===1?'22点以上=最重度(第1号相当)':g===2?'10〜21点=重度(第2号ルート対象)':'10点未満=中等度以下'}`;
-    return {grade:g, adlTotal, adlFilled, reason};
-  }
+  if (adlTotal!==null&&adlTotal>=10)
+    return {grade:2, adlTotal, adlFilled,
+      reason:`ADL評価合計${adlTotal}点（≧10点）`,
+      basis:'政令第1条第2項第2号・手引き：政令別表第2第3〜5号の障害 + 日常生活活動評価表10点以上（重複障害の場合に適用）'};
 
-  // ADL未記入 → MMTで補完
-  const mmts = [d.mmtRightArm,d.mmtLeftArm,d.mmtRightLeg,d.mmtLeftLeg]
-    .filter(v=>v!=='').map(v=>parseInt(v));
-  if (mmts.length >= 2) {
-    const avg = mmts.reduce((a,v)=>a+v,0)/mmts.length;
-    if (avg <= 1) return {grade:1,adlTotal,adlFilled,reason:`MMT平均${avg.toFixed(1)} → 最重度相当`};
-    if (avg <= 2) return {grade:2,adlTotal,adlFilled,reason:`MMT平均${avg.toFixed(1)} → 重度相当`};
-  }
+  // ── 5. 手帳等級3〜4 → Grade 2（重複時の第2号候補）
+  if (g===3||g===4)
+    return {grade:2, adlTotal, adlFilled,
+      reason:`手帳${g}級（重度相当・重複障害の第2号候補）`,
+      basis:'政令別表第1各号の1〜2に該当（身体障害者手帳3〜4級相当）'};
 
-  // 手帳等級で代替
-  const g = parseInt(d.grade);
-  if (!g) return null;
-  const grade = g===1?1:g===2?2:3;
-  return {grade, adlTotal, adlFilled, reason:`手帳${g}級から推定（ADL未記入のため参考値）`};
+  // ── 6. 手帳等級5〜6 → Grade 3
+  if (g>=5)
+    return {grade:3, adlTotal, adlFilled,
+      reason:`手帳${g}級（中等度〜軽度）`,
+      basis:'政令別表第1各号（身体障害者手帳5〜6級相当、単独では対象外）'};
+
+  // データ不足
+  if (adlTotal!==null)
+    return {grade:3, adlTotal, adlFilled,
+      reason:`ADL評価合計${adlTotal}点（10点未満）`,
+      basis:'ADL評価10点未満：単独・重複いずれの基準にも未達'};
+
+  return null;
 }
 
 function gradeVision() {
@@ -745,7 +853,8 @@ function assess() {
       type: DIS_LABELS[k],
       grade: d.grade,
       label: d.grade===1?'最重度（1級相当）':d.grade===2?'重度（2級相当）':'中等度以下（3級相当）',
-      reason: d.reason||''
+      reason: d.reason||'',
+      basis: d.basis||''
     }))
   });
 
@@ -1052,15 +1161,19 @@ function buildLimb(){
         ${active?colors[mark]:'border-gray-200 text-gray-400 bg-white'}">${mark}</button>`;
   };
 
-  // ROM行生成（他動域 右/左、正常値表示）
-  const romRow=(lbl,idR,idL,vR,vL,norm)=>`
+  // ROM行生成（他動域・自動域 右/左）— 正しいパラメーター順: lbl, 右他動ID, 右他動値, 右自動ID, 右自動値, 左他動ID, 左他動値, 左自動ID, 左自動値, 正常値
+  const romRow=(lbl,idR,vR,idRa,vRa,idL,vL,idLa,vLa,norm)=>`
     <tr class="border-b border-gray-100">
-      <td class="py-1.5 px-2 text-xs text-gray-600 whitespace-nowrap">${lbl}</td>
+      <td class="py-1.5 px-1 text-xs text-gray-600 whitespace-nowrap">${lbl}</td>
       <td class="py-1 px-1 text-gray-400 text-center text-xs">${norm}</td>
-      <td class="py-1 px-1"><input type="number" id="${idR}" value="${vR}" placeholder="${norm}" step="1"
-        class="w-16 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
-      <td class="py-1 px-1"><input type="number" id="${idL}" value="${vL}" placeholder="${norm}" step="1"
-        class="w-16 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
+      <td class="py-1 px-0.5"><input type="number" id="${idR}" value="${vR}" placeholder="${norm}" step="1"
+        class="w-12 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
+      <td class="py-1 px-0.5"><input type="number" id="${idRa}" value="${vRa}" placeholder="-" step="1"
+        class="w-12 border border-blue-200 rounded p-1 text-center text-xs bg-blue-50 focus:ring-1 focus:ring-blue-300 outline-none"></td>
+      <td class="py-1 px-0.5"><input type="number" id="${idL}" value="${vL}" placeholder="${norm}" step="1"
+        class="w-12 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
+      <td class="py-1 px-0.5"><input type="number" id="${idLa}" value="${vLa}" placeholder="-" step="1"
+        class="w-12 border border-blue-200 rounded p-1 text-center text-xs bg-blue-50 focus:ring-1 focus:ring-blue-300 outline-none"></td>
     </tr>`;
 
   // 手指ROM行
@@ -1085,10 +1198,7 @@ function buildLimb(){
     ),
     fld('障害固定の別',sel('limb_fixed',d.fixed,['固定','未固定']))
   )}
-  ${grid2(
-    fld('手術日（参考）',txt('limb_surgery',d.surgeryDate,'例：2020年5月')),
-    fld('移動手段（屋内）',sel('limb_mob_in',d.mobilityIndoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','寝たきり']))
-  )}
+  ${fld('手術日（参考）',txt('limb_surgery',d.surgeryDate,'例：2020年5月'))}
 
   <!-- ① 体のイラスト -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
@@ -1174,13 +1284,17 @@ function buildLimb(){
           ${[
             ['上肢腱反射','limb_ref_ur',d.reflexUpperR,'limb_ref_ul',d.reflexUpperL],
             ['下肢腱反射','limb_ref_lr',d.reflexLowerR,'limb_ref_ll',d.reflexLowerL],
-            ['バビンスキー反射','limb_babi_r',d.babinski,'limb_babi_l','']
           ].map(([lbl,idR,vR,idL,vL])=>`
             <tr class="border-b border-orange-100">
               <td class="p-2 text-gray-600">${lbl}</td>
               <td class="p-1">${sel(idR,vR,['+（亢進）','±（正常）','−（消失）'])}</td>
-              <td class="p-1">${lbl==='バビンスキー反射'?'':sel(idL,vL||'',['+（陽性）','−（陰性）'])}</td>
+              <td class="p-1">${sel(idL,vL||'',['+（亢進）','±（正常）','−（消失）'])}</td>
             </tr>`).join('')}
+          <tr class="border-b border-orange-100">
+            <td class="p-2 text-gray-600">バビンスキー反射</td>
+            <td class="p-1">${sel('limb_babi_r',d.babinski,['+（陽性）','−（陰性）'])}</td>
+            <td class="p-1">${sel('limb_babi_l',d.babinskiL||'',['+（陽性）','−（陰性）'])}</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1190,7 +1304,17 @@ function buildLimb(){
 
   <!-- ⑤ 手指の関節可動域 -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
-    <p class="text-sm font-bold text-gray-700 mb-3">⑤ 手指の関節可動域（屈曲角度 °）</p>
+    <p class="text-sm font-bold text-gray-700 mb-2">⑤ 手指の関節可動域（屈曲角度 °）</p>
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+      <p class="text-xs font-bold text-amber-800 mb-1">手指全廃の確認（政令別表第2第3号 判定用）</p>
+      <p class="text-xs text-amber-700 mb-2">「両上肢の全ての指を全廃したもの」に該当するか確認してください。</p>
+      ${grid2(
+        fld('右手：全指欠損または機能全廃',
+          sel('limb_all_fin_r',d.allFingersRightLost,[{v:'yes',l:'はい（全指全廃）'},{v:'no',l:'いいえ'}])),
+        fld('左手：全指欠損または機能全廃',
+          sel('limb_all_fin_l',d.allFingersLeftLost,[{v:'yes',l:'はい（全指全廃）'},{v:'no',l:'いいえ'}]))
+      )}
+    </div>
     <div class="overflow-x-auto">
       <table class="w-full text-xs border-collapse">
         <thead><tr class="bg-orange-100">
@@ -1220,31 +1344,40 @@ function buildLimb(){
     fld('⑥ 握力 左手',num('limb_grip_l',d.gripLeft,'30','kg'))
   )}
 
-  <!-- ⑦ 関節可動域（他動域 ROM） -->
+  <!-- ⑦ 関節可動域（他動域・自動域） -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
-    <p class="text-sm font-bold text-gray-700 mb-3">⑦ 関節可動域（他動域 °）</p>
+    <p class="text-sm font-bold text-gray-700 mb-1">⑦ 関節可動域（°）</p>
+    <p class="text-xs text-gray-500 mb-3">他動域＝検者が動かした角度 ／ <span class="text-blue-600">自動域＝患者自身が動かした角度</span></p>
     <div class="overflow-x-auto">
       <table class="w-full text-xs border-collapse">
-        <thead><tr class="bg-orange-100">
-          <th class="p-2 border border-orange-200 text-left">関節・方向</th>
-          <th class="p-2 border border-orange-200 text-center">正常値</th>
-          <th class="p-2 border border-orange-200 text-center">右（°）</th>
-          <th class="p-2 border border-orange-200 text-center">左（°）</th>
-        </tr></thead>
+        <thead>
+          <tr class="bg-orange-100">
+            <th rowspan="2" class="p-2 border border-orange-200 text-left">関節・方向</th>
+            <th rowspan="2" class="p-1 border border-orange-200 text-center">正常値</th>
+            <th colspan="2" class="p-1 border border-orange-200 text-center">右</th>
+            <th colspan="2" class="p-1 border border-orange-200 text-center">左</th>
+          </tr>
+          <tr class="bg-orange-50">
+            <th class="p-1 border border-orange-200 text-center font-normal text-gray-600">他動域</th>
+            <th class="p-1 border border-blue-200 text-center font-normal text-blue-600 bg-blue-50">自動域</th>
+            <th class="p-1 border border-orange-200 text-center font-normal text-gray-600">他動域</th>
+            <th class="p-1 border border-blue-200 text-center font-normal text-blue-600 bg-blue-50">自動域</th>
+          </tr>
+        </thead>
         <tbody class="divide-y divide-gray-100">
-          ${romRow('肩関節 屈曲','limb_rom_sh_f_r',d.romShoulderFlexR,'limb_rom_sh_f_l',d.romShoulderFlexL,'180')}
-          ${romRow('肩関節 伸展','limb_rom_sh_e_r',d.romShoulderExtR,'limb_rom_sh_e_l',d.romShoulderExtL,'50')}
-          ${romRow('肩関節 外転','limb_rom_sh_a_r',d.romShoulderAbdR,'limb_rom_sh_a_l',d.romShoulderAbdL,'180')}
-          ${romRow('肘関節 屈曲','limb_rom_el_f_r',d.romElbowFlexR,'limb_rom_el_f_l',d.romElbowFlexL,'145')}
-          ${romRow('肘関節 伸展','limb_rom_el_e_r',d.romElbowExtR,'limb_rom_el_e_l',d.romElbowExtL,'5')}
-          ${romRow('手関節 屈曲','limb_rom_wr_f_r',d.romWristFlexR,'limb_rom_wr_f_l',d.romWristFlexL,'90')}
-          ${romRow('手関節 伸展','limb_rom_wr_e_r',d.romWristExtR,'limb_rom_wr_e_l',d.romWristExtL,'70')}
-          ${romRow('股関節 屈曲','limb_rom_hi_f_r',d.romHipFlexR,'limb_rom_hi_f_l',d.romHipFlexL,'125')}
-          ${romRow('股関節 伸展','limb_rom_hi_e_r',d.romHipExtR,'limb_rom_hi_e_l',d.romHipExtL,'15')}
-          ${romRow('股関節 外転','limb_rom_hi_a_r',d.romHipAbdR,'limb_rom_hi_a_l',d.romHipAbdL,'45')}
-          ${romRow('膝関節 屈曲','limb_rom_kn_f_r',d.romKneeFlexR,'limb_rom_kn_f_l',d.romKneeFlexL,'130')}
-          ${romRow('足関節 底屈','limb_rom_an_p_r',d.romAnkleFlexR,'limb_rom_an_p_l',d.romAnkleFlexL,'45')}
-          ${romRow('足関節 背屈','limb_rom_an_d_r',d.romAnkleExtR,'limb_rom_an_d_l',d.romAnkleExtL,'20')}
+          ${romRow('肩関節 屈曲','limb_rom_sh_f_r',d.romShoulderFlexR,'limb_rom_sh_f_r_a',d.romShoulderFlexActiveR,'limb_rom_sh_f_l',d.romShoulderFlexL,'limb_rom_sh_f_l_a',d.romShoulderFlexActiveL,'180')}
+          ${romRow('肩関節 伸展','limb_rom_sh_e_r',d.romShoulderExtR,'limb_rom_sh_e_r_a',d.romShoulderExtActiveR,'limb_rom_sh_e_l',d.romShoulderExtL,'limb_rom_sh_e_l_a',d.romShoulderExtActiveL,'50')}
+          ${romRow('肩関節 外転','limb_rom_sh_a_r',d.romShoulderAbdR,'limb_rom_sh_a_r_a',d.romShoulderAbdActiveR,'limb_rom_sh_a_l',d.romShoulderAbdL,'limb_rom_sh_a_l_a',d.romShoulderAbdActiveL,'180')}
+          ${romRow('肘関節 屈曲','limb_rom_el_f_r',d.romElbowFlexR,'limb_rom_el_f_r_a',d.romElbowFlexActiveR,'limb_rom_el_f_l',d.romElbowFlexL,'limb_rom_el_f_l_a',d.romElbowFlexActiveL,'145')}
+          ${romRow('肘関節 伸展','limb_rom_el_e_r',d.romElbowExtR,'limb_rom_el_e_r_a',d.romElbowExtActiveR,'limb_rom_el_e_l',d.romElbowExtL,'limb_rom_el_e_l_a',d.romElbowExtActiveL,'5')}
+          ${romRow('手関節 屈曲','limb_rom_wr_f_r',d.romWristFlexR,'limb_rom_wr_f_r_a',d.romWristFlexActiveR,'limb_rom_wr_f_l',d.romWristFlexL,'limb_rom_wr_f_l_a',d.romWristFlexActiveL,'90')}
+          ${romRow('手関節 伸展','limb_rom_wr_e_r',d.romWristExtR,'limb_rom_wr_e_r_a',d.romWristExtActiveR,'limb_rom_wr_e_l',d.romWristExtL,'limb_rom_wr_e_l_a',d.romWristExtActiveL,'70')}
+          ${romRow('股関節 屈曲','limb_rom_hi_f_r',d.romHipFlexR,'limb_rom_hi_f_r_a',d.romHipFlexActiveR,'limb_rom_hi_f_l',d.romHipFlexL,'limb_rom_hi_f_l_a',d.romHipFlexActiveL,'125')}
+          ${romRow('股関節 伸展','limb_rom_hi_e_r',d.romHipExtR,'limb_rom_hi_e_r_a',d.romHipExtActiveR,'limb_rom_hi_e_l',d.romHipExtL,'limb_rom_hi_e_l_a',d.romHipExtActiveL,'15')}
+          ${romRow('股関節 外転','limb_rom_hi_a_r',d.romHipAbdR,'limb_rom_hi_a_r_a',d.romHipAbdActiveR,'limb_rom_hi_a_l',d.romHipAbdL,'limb_rom_hi_a_l_a',d.romHipAbdActiveL,'45')}
+          ${romRow('膝関節 屈曲','limb_rom_kn_f_r',d.romKneeFlexR,'limb_rom_kn_f_r_a',d.romKneeFlexActiveR,'limb_rom_kn_f_l',d.romKneeFlexL,'limb_rom_kn_f_l_a',d.romKneeFlexActiveL,'130')}
+          ${romRow('足関節 底屈','limb_rom_an_p_r',d.romAnkleFlexR,'limb_rom_an_p_r_a',d.romAnkleFlexActiveR,'limb_rom_an_p_l',d.romAnkleFlexL,'limb_rom_an_p_l_a',d.romAnkleFlexActiveL,'45')}
+          ${romRow('足関節 背屈','limb_rom_an_d_r',d.romAnkleExtR,'limb_rom_an_d_r_a',d.romAnkleExtActiveR,'limb_rom_an_d_l',d.romAnkleExtL,'limb_rom_an_d_l_a',d.romAnkleExtActiveL,'20')}
         </tbody>
       </table>
     </div>
@@ -1275,14 +1408,23 @@ function buildLimb(){
     fld('中心静脈栄養（IVH）',sel('limb_iv',d.ivDrip,['なし','あり']))
   )}
 
-  <!-- ⑪ 筋力MMT -->
+  <!-- ⑪ 筋力MMT + 筋緊張 -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
     <p class="text-sm font-bold text-gray-700 mb-2">⑪ 筋力（MMT 0〜5）</p>
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-2 gap-3 mb-4">
       ${[['右上肢','limb_mmt_ra',d.mmtRightArm],['左上肢','limb_mmt_la',d.mmtLeftArm],
          ['右下肢','limb_mmt_rl',d.mmtRightLeg],['左下肢','limb_mmt_ll',d.mmtLeftLeg]].map(([lbl,id,val])=>
         fld(lbl,sel(id,val,[{v:'0',l:'0（収縮なし）'},{v:'1',l:'1（わずか）'},{v:'2',l:'2（重力なし）'},
           {v:'3',l:'3（重力に抗す）'},{v:'4',l:'4（抵抗に打ち勝つ）'},{v:'5',l:'5（正常）'}]))
+      ).join('')}
+    </div>
+    <p class="text-xs font-bold text-gray-700 mb-1">筋緊張（Modified Ashworth Scale）</p>
+    <p class="text-xs text-gray-500 mb-2">0=正常 / 1=軽度亢進 / 1+=やや強い / 2=顕著な亢進 / 3=著明な亢進 / 4=強直</p>
+    <div class="grid grid-cols-2 gap-3">
+      ${[['右上肢','limb_spas_ra',d.spasticityRightArm],['左上肢','limb_spas_la',d.spasticityLeftArm],
+         ['右下肢','limb_spas_rl',d.spasticityRightLeg],['左下肢','limb_spas_ll',d.spasticityLeftLeg]].map(([lbl,id,val])=>
+        fld(lbl,sel(id,val,[{v:'0',l:'0（正常）'},{v:'1',l:'1（軽度亢進）'},{v:'1+',l:'1+（やや強い亢進）'},
+          {v:'2',l:'2（顕著な亢進）'},{v:'3',l:'3（著明な亢進）'},{v:'4',l:'4（強直）'}]))
       ).join('')}
     </div>
   </div>
@@ -1295,11 +1437,11 @@ function buildLimb(){
     </div>
     <div class="flex items-center gap-3 mb-3">
       <span class="text-xs text-gray-500">ADL合計（補助具なし）</span>
-      <span id="adl-total" class="font-bold text-sm ${adlTotal!==null?(adlTotal>=22?'text-red-600':adlTotal>=10?'text-orange-600':'text-gray-600'):'text-gray-400'}">
+      <span id="adl-total" class="font-bold text-sm ${adlTotal!==null?(adlTotal>=10?'text-orange-600':'text-gray-600'):'text-gray-400'}">
         ${adlTotal!==null?`${adlTotal} 点`:'未入力'}
       </span>
       <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-        <div id="adl-bar" class="h-full rounded-full transition-all ${adlTotal!==null?(adlTotal>=22?'bg-red-500':adlTotal>=10?'bg-orange-500':'bg-green-500'):'bg-gray-200'}"
+        <div id="adl-bar" class="h-full rounded-full transition-all ${adlTotal!==null?(adlTotal>=10?'bg-orange-500':'bg-green-500'):'bg-gray-200'}"
           style="width:${adlTotal!==null?Math.min(100,Math.round(adlTotal/34*100)):0}%"></div>
       </div>
       <span class="text-xs text-gray-400">34点満点</span>
@@ -1328,9 +1470,10 @@ function buildLimb(){
     </div>
     ${adlTotal!==null?`
     <div class="mt-3 bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm">
-      <p class="font-bold text-gray-800 mb-1">ADL評価結果（補助具なし）：合計 <span class="${adlTotal>=22?'text-red-600':adlTotal>=10?'text-orange-600':'text-green-600'} text-lg">${adlTotal}</span> 点</p>
-      <p class="text-xs text-gray-600">≧22点→最重度相当（第1号） / 10〜21点→重度相当（第2号ルート対象） / 〜9点→中等度以下</p>
-      <p class="text-xs text-blue-700 mt-1">※認定基準体系表「政令別表第2第3〜5号の障害 + ADL10点以上 → 第2号」ルートで参照されます。</p>
+      <p class="font-bold text-gray-800 mb-1">ADL評価結果（補助具なし）：合計 <span class="${adlTotal>=10?'text-orange-600':'text-green-600'} text-lg">${adlTotal}</span> 点</p>
+      <p class="text-xs text-gray-600">≧10点 → 重複障害の第2号ルート候補（政令別表第2第3〜5号との組合せで適用）</p>
+      <p class="text-xs text-gray-600">＜10点 → 中等度以下（単独・重複いずれでも第2号ルート不該当）</p>
+      <p class="text-xs text-blue-700 mt-1">根拠：手引き 第3章 第3節「重複障害の場合」政令別表第2第3〜5号 + 日常生活活動評価表10点以上 → 第2号</p>
     </div>`:''}
   </div>`;
 }
@@ -1799,6 +1942,7 @@ function step5(wrap){
                   <span class="font-medium">${it.type}：</span>
                   <span class="${it.grade===1?'text-red-600 font-bold':it.grade===2?'text-orange-600 font-bold':'text-gray-500'}">${it.label}</span>
                   ${it.reason?`<br><span class="text-gray-500 ml-4">→ ${it.reason}</span>`:''}
+                  ${it.basis?`<br><span class="text-blue-600 ml-4">📋 ${it.basis}</span>`:''}
                 </li>`).join('')}</ul>`:
                f.text?`<pre class="text-xs text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">${f.text}</pre>`:''}
             </div>
@@ -1820,7 +1964,8 @@ function step5(wrap){
       ${adlTotal!==null?`
         <div class="mt-3 bg-orange-50 rounded-xl p-3 text-xs text-orange-800">
           <p class="font-bold mb-1">肢体ADL評価合計（補助具なし）：${adlTotal}点 / 34点満点</p>
-          <p>≧22点→最重度相当（第1号） / 10〜21点→重度（第2号ルート対象） / 〜9点→中等度以下</p>
+          <p>≧10点 → 重複障害の第2号ルート候補（政令別表第2第3〜5号との組合せ適用）</p>
+          <p class="text-gray-500 mt-0.5">根拠：手引き 第3章 第3節 重複障害の認定基準</p>
         </div>`:''}
     </div>
 
@@ -1986,6 +2131,7 @@ function bindEvents(){
   bSel('limb_ref_lr',v=>state.details.limb.reflexLowerR=v);
   bSel('limb_ref_ll',v=>state.details.limb.reflexLowerL=v);
   bSel('limb_babi_r',v=>state.details.limb.babinski=v);
+  bSel('limb_babi_l',v=>state.details.limb.babinskiL=v);
   bTxt('limb_path_reflex',v=>state.details.limb.pathReflex=v);
   bSel('limb_bladder_rectal',v=>state.details.limb.bladderRectal=v);
   // ④ 手指ROM
@@ -1998,7 +2144,7 @@ function bindEvents(){
   // ④ 握力
   bNum('limb_grip_r',v=>state.details.limb.gripRight=v);
   bNum('limb_grip_l',v=>state.details.limb.gripLeft=v);
-  // ④ 関節ROM
+  // ④ 関節ROM（他動域）
   [['limb_rom_sh_f_r','romShoulderFlexR'],['limb_rom_sh_f_l','romShoulderFlexL'],
    ['limb_rom_sh_e_r','romShoulderExtR'],['limb_rom_sh_e_l','romShoulderExtL'],
    ['limb_rom_sh_a_r','romShoulderAbdR'],['limb_rom_sh_a_l','romShoulderAbdL'],
@@ -2013,6 +2159,28 @@ function bindEvents(){
    ['limb_rom_an_p_r','romAnkleFlexR'],['limb_rom_an_p_l','romAnkleFlexL'],
    ['limb_rom_an_d_r','romAnkleExtR'],['limb_rom_an_d_l','romAnkleExtL']
   ].forEach(([id,key])=>bNum(id,v=>state.details.limb[key]=v));
+  // ④ 関節ROM（自動域）
+  [['limb_rom_sh_f_r_a','romShoulderFlexActiveR'],['limb_rom_sh_f_l_a','romShoulderFlexActiveL'],
+   ['limb_rom_sh_e_r_a','romShoulderExtActiveR'],['limb_rom_sh_e_l_a','romShoulderExtActiveL'],
+   ['limb_rom_sh_a_r_a','romShoulderAbdActiveR'],['limb_rom_sh_a_l_a','romShoulderAbdActiveL'],
+   ['limb_rom_el_f_r_a','romElbowFlexActiveR'],['limb_rom_el_f_l_a','romElbowFlexActiveL'],
+   ['limb_rom_el_e_r_a','romElbowExtActiveR'],['limb_rom_el_e_l_a','romElbowExtActiveL'],
+   ['limb_rom_wr_f_r_a','romWristFlexActiveR'],['limb_rom_wr_f_l_a','romWristFlexActiveL'],
+   ['limb_rom_wr_e_r_a','romWristExtActiveR'],['limb_rom_wr_e_l_a','romWristExtActiveL'],
+   ['limb_rom_hi_f_r_a','romHipFlexActiveR'],['limb_rom_hi_f_l_a','romHipFlexActiveL'],
+   ['limb_rom_hi_e_r_a','romHipExtActiveR'],['limb_rom_hi_e_l_a','romHipExtActiveL'],
+   ['limb_rom_hi_a_r_a','romHipAbdActiveR'],['limb_rom_hi_a_l_a','romHipAbdActiveL'],
+   ['limb_rom_kn_f_r_a','romKneeFlexActiveR'],['limb_rom_kn_f_l_a','romKneeFlexActiveL'],
+   ['limb_rom_an_p_r_a','romAnkleFlexActiveR'],['limb_rom_an_p_l_a','romAnkleFlexActiveL'],
+   ['limb_rom_an_d_r_a','romAnkleExtActiveR'],['limb_rom_an_d_l_a','romAnkleExtActiveL']
+  ].forEach(([id,key])=>bNum(id,v=>state.details.limb[key]=v));
+  // ④ 手指全廃・筋緊張
+  bSel('limb_all_fin_r',v=>state.details.limb.allFingersRightLost=v);
+  bSel('limb_all_fin_l',v=>state.details.limb.allFingersLeftLost=v);
+  bSel('limb_spas_ra',v=>state.details.limb.spasticityRightArm=v);
+  bSel('limb_spas_la',v=>state.details.limb.spasticityLeftArm=v);
+  bSel('limb_spas_rl',v=>state.details.limb.spasticityRightLeg=v);
+  bSel('limb_spas_ll',v=>state.details.limb.spasticityLeftLeg=v);
   // ④ 補装具・移動・医療器具・MMT
   document.querySelectorAll('.limb-aid').forEach(c=>{
     c.addEventListener('change',e=>{
