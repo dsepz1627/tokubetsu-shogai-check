@@ -28,37 +28,68 @@ const initState = () => ({
   disabilities: [],   // ['limb','vision','hearing','mental','internal']
 
   details: {
-    // ─── 肢体不自由（身体障害者診断書・意見書 肢体不自由用）
+    // ─── 肢体不自由（身体障害者診断書・意見書 肢体不自由用 様式第11号）
     limb: {
+      // 基本情報
       disease: '',            // 傷病名・原因疾患
       grade: '',              // 身体障害者手帳等級 1-6
       onset: '',              // 発症・受傷年月
-      fixed: '',              // 障害固定: 固定/未固定
+      surgeryDate: '',        // 手術日（参考）
+      fixed: '',              // 障害固定の別
+      // ① 体のイラスト — 部位と障害種別
       parts: [],              // 障害部位（複数可）
-      partFunc: {},           // 各部位の機能状態
-      mobilityIndoor: '',     // 屋内移動手段
-      mobilityOutdoor: '',    // 屋外移動手段
-      sittingBalance: '',     // 起座位保持
-      mmtRightArm: '',        // 筋力MMT 右上肢 0-5
-      mmtLeftArm: '',         // 筋力MMT 左上肢 0-5
-      mmtRightLeg: '',        // 筋力MMT 右下肢 0-5
-      mmtLeftLeg: '',         // 筋力MMT 左下肢 0-5
-      adl: Array(7).fill(''), // ADL10点法（7項目×4段階）
-      aids: [],               // 補装具・補助器具
-      ventilator: '',         // 人工呼吸器
-      tubeFeed: '',           // 経管栄養
-      suction: '',            // 気道内吸引
-      ivDrip: '',             // 中心静脈栄養
-      gripRight: '',          // 握力 右手（kg）
-      gripLeft: '',           // 握力 左手（kg）
-      romShoulderR: '',       // 肩関節外転 右（°）
-      romShoulderL: '',       // 肩関節外転 左（°）
-      romElbowR: '',          // 肘関節屈曲 右（°）
-      romElbowL: '',          // 肘関節屈曲 左（°）
-      romHipR: '',            // 股関節屈曲 右（°）
-      romHipL: '',            // 股関節屈曲 左（°）
-      romKneeR: '',           // 膝関節屈曲 右（°）
-      romKneeL: ''            // 膝関節屈曲 左（°）
+      partFunc: {},           // 各部位の障害種別（欠損/運動麻痺/知覚麻痺/知覚異常/その他障害）
+      // ② 四肢周径（cm）
+      circUpperR: '',circUpperL: '',    // 上腕中央部
+      circForearmR:'',circForearmL:'', // 前腕最大部
+      circThighR: '',circThighL: '',   // 大腿中央
+      circLowerR: '',circLowerL: '',   // 下腿最大部
+      // ③ 四肢長（cm）
+      lenUpperR: '',lenUpperL: '',     // 上肢長
+      lenLowerR: '',lenLowerL: '',     // 下肢長
+      // ④ 神経学的所見
+      sensory: '',            // 知覚障害: あり/なし
+      motorType: '',          // 運動麻痺の種類
+      disorderOrigin: '',     // 障害の起因部位
+      reflexUpperR: '',reflexUpperL: '', // 上肢腱反射
+      reflexLowerR: '',reflexLowerL: '', // 下肢腱反射
+      babinski: '',           // バビンスキー反射
+      pathReflex: '',         // その他の病的反射
+      bladderRectal: '',      // ぼうこう・直腸障害
+      // ⑤ 手指の関節可動域（屈曲角度・°）
+      thumbMpR:'',thumbMpL:'',thumbIpR:'',thumbIpL:'',
+      indexMpR:'',indexMpL:'',indexPipDipR:'',indexPipDipL:'',
+      middleMpR:'',middleMpL:'',middlePipDipR:'',middlePipDipL:'',
+      ringMpR:'',ringMpL:'',ringPipDipR:'',ringPipDipL:'',
+      littleMpR:'',littleMpL:'',littlePipDipR:'',littlePipDipL:'',
+      // ⑥ 握力（kg）
+      gripRight: '',gripLeft: '',
+      // ⑦ 各部位・関節可動域（他動域 °）
+      romShoulderFlexR:'',romShoulderFlexL:'',   // 肩屈曲（正常180）
+      romShoulderExtR:'',romShoulderExtL:'',     // 肩伸展（正常50）
+      romShoulderAbdR:'',romShoulderAbdL:'',     // 肩外転（正常180）
+      romElbowFlexR:'',romElbowFlexL:'',         // 肘屈曲（正常145）
+      romElbowExtR:'',romElbowExtL:'',           // 肘伸展（正常5）
+      romWristFlexR:'',romWristFlexL:'',         // 手関節屈曲（正常90）
+      romWristExtR:'',romWristExtL:'',           // 手関節伸展（正常70）
+      romHipFlexR:'',romHipFlexL:'',             // 股屈曲（正常125）
+      romHipExtR:'',romHipExtL:'',               // 股伸展（正常15）
+      romHipAbdR:'',romHipAbdL:'',               // 股外転（正常45）
+      romKneeFlexR:'',romKneeFlexL:'',           // 膝屈曲（正常130）
+      romAnkleFlexR:'',romAnkleFlexL:'',         // 足底屈（正常45）
+      romAnkleExtR:'',romAnkleExtL:'',           // 足背屈（正常20）
+      // ⑧ 補装具・補助器具
+      aids: [],
+      // ⑨ 移動能力・座位
+      mobilityIndoor: '',mobilityOutdoor: '',
+      sittingBalance: '',
+      // ⑩ 医療器具
+      ventilator: '',tubeFeed: '',suction: '',ivDrip: '',
+      // ⑪ MMT（筋力）
+      mmtRightArm:'',mmtLeftArm:'',mmtRightLeg:'',mmtLeftLeg:'',
+      // ⑫ 日常生活動作評価表（17項目）○/△/×
+      adlNoAid:  Array(17).fill(''),  // 補助具なし
+      adlWithAid: Array(17).fill('')  // 補助具あり
     },
 
     // ─── 視覚障害（身体障害者診断書・意見書 視覚障害用）
@@ -215,11 +246,13 @@ let state = initState();
 // ═══════════════════════════════════════════════════════
 let selectedZone = null;
 
+// 診断書イラストの記号種別（様式に準拠）
 const ZONE_COLORS = {
-  '機能全廃':   {fill:'#fca5a5',stroke:'#ef4444',text:'#991b1b',btn:'bg-red-200 border-red-400 text-red-800'},
-  '著しく障害': {fill:'#fdba74',stroke:'#f97316',text:'#9a3412',btn:'bg-orange-200 border-orange-400 text-orange-800'},
-  '一部障害':   {fill:'#fde047',stroke:'#eab308',text:'#713f12',btn:'bg-yellow-200 border-yellow-400 text-yellow-800'},
-  '正常':       {fill:'#86efac',stroke:'#22c55e',text:'#14532d',btn:'bg-green-200 border-green-400 text-green-800'}
+  '欠損':     {fill:'#1f2937',stroke:'#111827',text:'#f9fafb',btn:'bg-gray-800 border-gray-900 text-white'},
+  '運動麻痺': {fill:'#fca5a5',stroke:'#ef4444',text:'#991b1b',btn:'bg-red-200 border-red-400 text-red-800'},
+  '知覚麻痺': {fill:'#fdba74',stroke:'#f97316',text:'#9a3412',btn:'bg-orange-200 border-orange-400 text-orange-800'},
+  '知覚異常': {fill:'#fde047',stroke:'#eab308',text:'#713f12',btn:'bg-yellow-200 border-yellow-400 text-yellow-800'},
+  'その他障害':{fill:'#c4b5fd',stroke:'#8b5cf6',text:'#3b0764',btn:'bg-violet-200 border-violet-400 text-violet-800'}
 };
 
 function zoneFill(part){
@@ -300,6 +333,44 @@ function renderZonePanel(){
       class="w-full py-2 text-xs text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 select-none">
       この部位の選択を解除
     </button>`;
+}
+
+// ADL 17項目の○/△/× セット関数（onclick から呼び出し）
+function setAdl(col, idx, mark) {
+  if (col === 'no') state.details.limb.adlNoAid[idx] = mark;
+  else              state.details.limb.adlWithAid[idx] = mark;
+  // ボタンの色を更新（再レンダリングなし）
+  ['no','with'].forEach(c => {
+    ['○','△','×'].forEach(m => {
+      const btn = document.getElementById(`adl_${c}_${idx}_${m}`);
+      if (!btn) return;
+      const cur = c==='no' ? state.details.limb.adlNoAid[idx] : state.details.limb.adlWithAid[idx];
+      const active = cur === m;
+      const colors = {
+        '○':'bg-green-200 border-green-400 text-green-800',
+        '△':'bg-yellow-200 border-yellow-400 text-yellow-800',
+        '×':'bg-red-200 border-red-400 text-red-800'
+      };
+      btn.className = `text-sm font-bold py-1.5 px-3 rounded-lg border-2 transition min-w-[2.5rem]
+        ${active ? colors[m] : 'border-gray-200 text-gray-400 bg-white'}`;
+    });
+  });
+  // ADL合計を更新
+  const filled = state.details.limb.adlNoAid.filter(v=>v!=='');
+  if (filled.length > 0) {
+    const total = state.details.limb.adlNoAid.reduce((s,v) => s+(v===''?0:v==='○'?0:v==='△'?1:2), 0);
+    const el = document.getElementById('adl-total');
+    if (el) {
+      el.textContent = `合計 ${total} 点`;
+      el.className = `font-bold text-sm ${total>=22?'text-red-600':total>=10?'text-orange-600':'text-gray-600'}`;
+    }
+    const bar = document.getElementById('adl-bar');
+    if (bar) {
+      const pct = Math.min(100, Math.round(total/34*100));
+      bar.style.width = pct+'%';
+      bar.className = `h-full rounded-full transition-all ${total>=22?'bg-red-500':total>=10?'bg-orange-500':'bg-green-500'}`;
+    }
+  }
 }
 
 function buildBodyDiagram(){
@@ -419,20 +490,30 @@ const LIMB_PARTS = {
   rightArm:'右上肢', leftArm:'左上肢',
   rightLeg:'右下肢', leftLeg:'左下肢', trunk:'体幹'
 };
-const LIMB_FUNC  = ['機能全廃','著しく障害','一部障害','正常'];
-const LIMB_AIDS  = ['車いす（常時）','車いす（一時）','松葉杖','義手','義足','上肢装具','下肢装具','体幹装具','補助犬'];
-const MMT_OPTS   = ['0（筋収縮なし）','1（わずかな収縮）','2（重力なしで動く）','3（重力に抗して動く）','4（抵抗に打ち勝てる）','5（正常）'];
+// 診断書体イラストの記号（実際の様式に準拠）
+const LIMB_MARK_TYPES = ['欠損','運動麻痺','知覚麻痺','知覚異常','その他障害'];
+const LIMB_AIDS  = ['車いす（常時）','車いす（一時）','松葉杖','義手','義足','上肢装具','下肢装具','体幹装具','歩行補助車','補助犬'];
 
-const ADL_ITEMS = [
-  'つまさき立ち・片足立ち・一歩を踏み出す動作',
-  '歩行（屋内・屋外）',
-  '立ち上がり・座る動作',
-  '衣服の着脱（上衣・下衣）',
-  '洗面・入浴の動作',
-  '食事の動作（箸・コップ）',
-  '排便・排尿の動作・後始末'
+// 診断書様式 ⑫ 日常生活動作評価表（17項目）
+const LIMB_ADL_ITEMS = [
+  {n:1,  txt:'つまむ（新聞紙が引き抜けない程度）'},
+  {n:2,  txt:'握る（丸めた週刊誌が引き抜けない程度）'},
+  {n:3,  txt:'タオルを絞る（水をしぼれる程度）'},
+  {n:4,  txt:'とじひもを結ぶ', note:'5秒以内→○ / 10秒以内→△ / 10秒超・不可→×'},
+  {n:5,  txt:'食事をする'},
+  {n:6,  txt:'顔を洗う（顔に手のひらをつける）'},
+  {n:7,  txt:'排便の処置をする（臀のところに手をやる）'},
+  {n:8,  txt:'かぶりシャツを着て脱ぐ', note:'30秒以内→○ / 1分以内→△ / 1分超・不可→×'},
+  {n:9,  txt:'ワイシャツのボタンをとめる', note:'30秒以内→○ / 1分以内→△ / 1分超・不可→×'},
+  {n:10, txt:'ズボンの着脱（どのような姿勢でもよい）'},
+  {n:11, txt:'靴下をはく（どのような姿勢でもよい）'},
+  {n:12, txt:'すわる（正座・横すわり・あぐら・膝なげだし）'},
+  {n:13, txt:'歩く（屋内・屋外）'},
+  {n:14, txt:'片足で立つ'},
+  {n:15, txt:'立ちよる（手すり・杖等）'},
+  {n:16, txt:'階段をのぼる'},
+  {n:17, txt:'階段をおりる'}
 ];
-const ADL_OPTS = ['全介助','強い介助','一部介助','自立'];
 
 const MENTAL_ADL_ITEMS = [
   '適切な食事（食事の準備・後片づけ）',
@@ -457,24 +538,33 @@ const INTERNAL_SUBTYPES = {
 // ═══════════════════════════════════════════════════════
 function gradeLimb() {
   const d = state.details.limb;
-  if (d.ventilator === 'あり') return 1;
-  if (d.adl.every(v => v !== '')) {
-    const sum = d.adl.reduce((a,v) => a+parseInt(v), 0);
-    if (sum <= 10) return 1;
-    if (sum <= 17) return 2;
-    return 3;
+  // 人工呼吸器使用 → 政令別表第2第1号（最重度）
+  if (d.ventilator === 'あり') return {grade:1,adlTotal:null,adlFilled:0,reason:'人工呼吸器使用 → 政令別表第2第1号（最重度）に相当'};
+
+  // 17項目ADL評価（補助具なし列）
+  const adlFilled = d.adlNoAid.filter(v=>v!=='').length;
+  const adlTotal  = adlFilled>0 ? d.adlNoAid.reduce((s,v)=>s+(v===''?0:v==='○'?0:v==='△'?1:2),0) : null;
+
+  if (adlFilled >= 10) { // 半数以上入力があれば評価に使用
+    const g = adlTotal >= 22 ? 1 : adlTotal >= 10 ? 2 : 3;
+    const reason = `ADL評価表（17項目・補助具なし）合計 ${adlTotal}点 → ${g===1?'22点以上=最重度(第1号相当)':g===2?'10〜21点=重度(第2号ルート対象)':'10点未満=中等度以下'}`;
+    return {grade:g, adlTotal, adlFilled, reason};
   }
-  // MMTで全廃に近い場合
+
+  // ADL未記入 → MMTで補完
   const mmts = [d.mmtRightArm,d.mmtLeftArm,d.mmtRightLeg,d.mmtLeftLeg]
     .filter(v=>v!=='').map(v=>parseInt(v));
-  if (mmts.length) {
+  if (mmts.length >= 2) {
     const avg = mmts.reduce((a,v)=>a+v,0)/mmts.length;
-    if (avg <= 1) return 1;
-    if (avg <= 2) return 2;
+    if (avg <= 1) return {grade:1,adlTotal,adlFilled,reason:`MMT平均${avg.toFixed(1)} → 最重度相当`};
+    if (avg <= 2) return {grade:2,adlTotal,adlFilled,reason:`MMT平均${avg.toFixed(1)} → 重度相当`};
   }
+
+  // 手帳等級で代替
   const g = parseInt(d.grade);
   if (!g) return null;
-  return g===1?1:g===2?2:3;
+  const grade = g===1?1:g===2?2:3;
+  return {grade, adlTotal, adlFilled, reason:`手帳${g}級から推定（ADL未記入のため参考値）`};
 }
 
 function gradeVision() {
@@ -621,8 +711,13 @@ function gradeInternal() {
 }
 
 function getGrade(type) {
-  return {limb:gradeLimb,vision:gradeVision,hearing:gradeHearing,
-    mental:gradeMental,internal:gradeInternal}[type]?.() ?? null;
+  const fn={limb:gradeLimb,vision:gradeVision,hearing:gradeHearing,
+    mental:gradeMental,internal:gradeInternal}[type];
+  if(!fn) return null;
+  const r=fn();
+  if(r===null) return null;
+  // gradeLimb returns object; others return number
+  return typeof r==='object' ? r : {grade:r, adlTotal:null, adlFilled:0, reason:''};
 }
 
 function combineTwo(g1,g2){
@@ -634,24 +729,98 @@ function combineTwo(g1,g2){
 
 function assess() {
   const sel = state.disabilities;
-  if (!sel.length) return {result:'ineligible',grades:{}};
-  const grades={};
-  sel.forEach(t=>{const g=getGrade(t);if(g!==null)grades[t]=g;});
+  const flow = []; // 認定基準体系表 試行フロー
+
+  if (!sel.length) return {result:'ineligible',grades:{},gradeDetails:{},flow};
+
+  const grades={}, gradeDetails={};
+  sel.forEach(t=>{
+    const r=getGrade(t);
+    if(r!==null){grades[t]=r.grade; gradeDetails[t]=r;}
+  });
+
+  flow.push({
+    step:'各障害の評価',
+    items: Object.entries(gradeDetails).map(([k,d])=>({
+      type: DIS_LABELS[k],
+      grade: d.grade,
+      label: d.grade===1?'最重度（1級相当）':d.grade===2?'重度（2級相当）':'中等度以下（3級相当）',
+      reason: d.reason||''
+    }))
+  });
+
   const vals=Object.values(grades);
-  if (!vals.length) return {result:'ineligible',grades};
+  if (!vals.length) {
+    flow.push({step:'判定不能',text:'入力データ不足のため評価できません。ADL評価または手帳等級を入力してください。'});
+    return {result:'ineligible',grades,gradeDetails,flow};
+  }
+
   const thr = state.isAdult?1:2;
-  const best = Math.min(...vals);
-  if (best<=thr) {
-    const single=Object.keys(grades).find(k=>grades[k]<=thr);
-    return {result:'eligible_single',grades,singleType:single};
+  const targetName = state.isAdult?'特別障害者手当（最重度=1級相当）':'障害児福祉手当（重度以上=2級相当）';
+
+  flow.push({step:'判定対象の確認', text:`年齢${state.age}歳 → ${targetName}の判定`});
+
+  // 単一障害ルート
+  if (vals.length===1) {
+    flow.push({step:'認定基準体系表 ▶ 障害が単一の場合', text:''});
+    const g=vals[0];
+    if(g<=thr){
+      flow.push({step:'→ 単独基準クリア',
+        text:`${Object.values(gradeDetails)[0].grade}級相当（${g<=1?'最重度':'重度'}）が基準（${thr}級相当）を満たす\n根拠：政令第1条第2項第${thr===1?'1':'2'}号（単一障害）`});
+      return {result:'eligible_single',grades,gradeDetails,flow,singleType:Object.keys(grades)[0]};
+    }
+    flow.push({step:'→ 単独では基準未達',
+      text:`評価：${g}級相当 ／ 必要：${thr}級相当以上\n→ 不該当`});
+    return {result:'ineligible',grades,gradeDetails,flow};
   }
-  if (vals.length>=2) {
-    const sorted=[...vals].sort((a,b)=>a-b);
-    let c=sorted[0];
-    for(let i=1;i<sorted.length;i++){c=combineTwo(c,sorted[i]);if(c<=thr)break;}
-    if(c<=thr) return {result:'eligible_combined',grades};
+
+  // 重複障害ルート
+  flow.push({step:`認定基準体系表 ▶ 障害が重複している場合（${vals.length}種類）`, text:''});
+
+  // まず単独クリア確認
+  const best=Math.min(...vals);
+  if(best<=thr){
+    const singleType=Object.keys(grades).find(k=>grades[k]<=thr);
+    flow.push({step:'→ 重複中の単独基準クリア',
+      text:`${DIS_LABELS[singleType]}が${best}級相当で単独クリア\n根拠：政令第1条第2項第${thr===1?'1':'2'}号（重複中単独）`});
+    return {result:'eligible_single',grades,gradeDetails,flow,singleType};
   }
-  return {result:'ineligible',grades};
+
+  // 別表1 併合認定
+  flow.push({step:'→ 単独未達。別表1「併合認定」を試みる',
+    text:'手引き第3章第3節「二以上の障害がある場合の認定」別表1 適用'});
+  const sorted=[...vals].sort((a,b)=>a-b);
+  let combined=sorted[0];
+  const combSteps=[`  開始：${sorted[0]}級相当`];
+  for(let i=1;i<sorted.length;i++){
+    const prev=combined;
+    combined=combineTwo(combined,sorted[i]);
+    combSteps.push(`  ${prev}級 ＋ ${sorted[i]}級 → 別表1適用 → ${combined}級相当`);
+    if(combined<=thr) break;
+  }
+  flow.push({step:'別表1 計算過程', text:combSteps.join('\n')});
+
+  // ADL10点以上ルート（政令別表第2第3〜5号 + ADL≥10点 → 第2号）
+  const limbD=gradeDetails.limb;
+  if(limbD && limbD.adlTotal!==null && limbD.adlTotal>=10 && combined>thr && thr<=2){
+    flow.push({step:'→ ADL評価ルート確認（認定基準体系表 第2号条件）',
+      text:`肢体ADL合計${limbD.adlTotal}点（≧10点）\n政令別表第2第3〜5号の障害を有し日常生活活動評価表の点が10点以上 → 第2号該当`});
+    combined=Math.min(combined,2);
+    if(combined<=thr){
+      flow.push({step:'→ ADL評価ルートで基準クリア', text:`ADL10点以上ルートにより${combined}級相当に到達`});
+      return {result:'eligible_combined',grades,gradeDetails,flow};
+    }
+  }
+
+  if(combined<=thr){
+    flow.push({step:'→ 併合認定で基準クリア',
+      text:`併合後${combined}級相当 → 基準（${thr}級相当）を満たす\n根拠：政令第1条第2項第${thr===1?'1':'2'}号（重複障害）`});
+    return {result:'eligible_combined',grades,gradeDetails,flow};
+  }
+
+  flow.push({step:'→ 不該当',
+    text:`併合後も${combined}級相当 → 基準（${thr}級相当）に未達\n→ 特別障害者手当・障害児福祉手当 ともに不該当`});
+  return {result:'ineligible',grades,gradeDetails,flow};
 }
 
 // ═══════════════════════════════════════════════════════
@@ -861,13 +1030,53 @@ function buildSec(k){
   return b[k]?b[k]():'';
 }
 
-// ─── 肢体不自由（身体障害者診断書・意見書 肢体不自由用）─────
+// ─── 肢体不自由（身体障害者診断書・意見書 様式第11号 完全準拠）─────
 function buildLimb(){
   const d=state.details.limb;
+
+  // ADL合計計算
+  const adlFilled=d.adlNoAid.filter(v=>v!=='').length;
+  const adlTotal=adlFilled>0?d.adlNoAid.reduce((s,v)=>s+(v===''?0:v==='○'?0:v==='△'?1:2),0):null;
+
+  // ADLボタン生成
+  const adlBtn=(col,i,mark)=>{
+    const cur=col==='no'?d.adlNoAid[i]:d.adlWithAid[i];
+    const active=cur===mark;
+    const colors={'○':'bg-green-200 border-green-400 text-green-800',
+                  '△':'bg-yellow-200 border-yellow-400 text-yellow-800',
+                  '×':'bg-red-200 border-red-400 text-red-800'};
+    return `<button id="adl_${col}_${i}_${mark}"
+      ontouchend="event.preventDefault();setAdl('${col}',${i},'${mark}')"
+      onclick="setAdl('${col}',${i},'${mark}')"
+      class="text-sm font-bold py-1.5 px-3 rounded-lg border-2 transition min-w-[2.5rem]
+        ${active?colors[mark]:'border-gray-200 text-gray-400 bg-white'}">${mark}</button>`;
+  };
+
+  // ROM行生成（他動域 右/左、正常値表示）
+  const romRow=(lbl,idR,idL,vR,vL,norm)=>`
+    <tr class="border-b border-gray-100">
+      <td class="py-1.5 px-2 text-xs text-gray-600 whitespace-nowrap">${lbl}</td>
+      <td class="py-1 px-1 text-gray-400 text-center text-xs">${norm}</td>
+      <td class="py-1 px-1"><input type="number" id="${idR}" value="${vR}" placeholder="${norm}" step="1"
+        class="w-16 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
+      <td class="py-1 px-1"><input type="number" id="${idL}" value="${vL}" placeholder="${norm}" step="1"
+        class="w-16 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
+    </tr>`;
+
+  // 手指ROM行
+  const fingerRow=(lbl,idR,vR,idL,vL)=>`
+    <tr class="border-b border-gray-100">
+      <td class="py-1 px-2 text-xs text-gray-600">${lbl}</td>
+      <td class="py-1 px-1"><input type="number" id="${idR}" value="${vR}" placeholder="°" step="1"
+        class="w-14 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
+      <td class="py-1 px-1"><input type="number" id="${idL}" value="${vL}" placeholder="°" step="1"
+        class="w-14 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
+    </tr>`;
+
   return `
-  ${secHeader('肢体不自由','orange','border-orange-200')}
+  ${secHeader('肢体不自由（様式第11号）','orange','border-orange-200')}
   ${grid2(
-    fld('傷病名・原因疾患',txt('limb_disease',d.disease,'例：脳梗塞後遺症')),
+    fld('傷病名・原因疾患',txt('limb_disease',d.disease,'例：脳梗塞後遺症、頸髄損傷')),
     fld('発症・受傷年月',txt('limb_onset',d.onset,'例：2020年3月'))
   )}
   ${grid2(
@@ -876,11 +1085,199 @@ function buildLimb(){
     ),
     fld('障害固定の別',sel('limb_fixed',d.fixed,['固定','未固定']))
   )}
+  ${grid2(
+    fld('手術日（参考）',txt('limb_surgery',d.surgeryDate,'例：2020年5月')),
+    fld('移動手段（屋内）',sel('limb_mob_in',d.mobilityIndoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','寝たきり']))
+  )}
 
-  ${buildBodyDiagram()}
+  <!-- ① 体のイラスト -->
+  <div class="bg-orange-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-1">① 体のイラスト（部位と障害の種別）</p>
+    <p class="text-xs text-gray-500 mb-3">部位をタップ → 下のパネルで障害種別を選択してください。脊髄疾患も記入してください。</p>
+    ${buildBodyDiagram()}
+  </div>
 
-  <div class="mb-5">
-    <p class="text-sm font-medium text-gray-700 mb-2">筋力（MMT 0〜5）</p>
+  <!-- ② 四肢周径 -->
+  <div class="bg-orange-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">② 四肢周径（cm）</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs border-collapse">
+        <thead><tr class="bg-orange-100">
+          <th class="p-2 border border-orange-200 text-left">部位</th>
+          <th class="p-2 border border-orange-200 text-center">右</th>
+          <th class="p-2 border border-orange-200 text-center">左</th>
+        </tr></thead>
+        <tbody>
+          ${[
+            ['上腕中央部','limb_cu_r',d.circUpperR,'limb_cu_l',d.circUpperL],
+            ['前腕最大部','limb_cf_r',d.circForearmR,'limb_cf_l',d.circForearmL],
+            ['大腿中央','limb_ct_r',d.circThighR,'limb_ct_l',d.circThighL],
+            ['下腿最大部','limb_cl_r',d.circLowerR,'limb_cl_l',d.circLowerL]
+          ].map(([lbl,idR,vR,idL,vL])=>`
+            <tr class="border-b border-orange-100">
+              <td class="p-2 text-gray-600">${lbl}</td>
+              <td class="p-1 text-center"><input type="number" id="${idR}" value="${vR}" placeholder="cm" step="0.1"
+                class="w-20 border border-gray-300 rounded p-1.5 text-center text-sm focus:ring-1 focus:ring-orange-400 outline-none"></td>
+              <td class="p-1 text-center"><input type="number" id="${idL}" value="${vL}" placeholder="cm" step="0.1"
+                class="w-20 border border-gray-300 rounded p-1.5 text-center text-sm focus:ring-1 focus:ring-orange-400 outline-none"></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ③ 四肢長 -->
+  <div class="bg-orange-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">③ 四肢長（cm）</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs border-collapse">
+        <thead><tr class="bg-orange-100">
+          <th class="p-2 border border-orange-200 text-left">部位</th>
+          <th class="p-2 border border-orange-200 text-center">右</th>
+          <th class="p-2 border border-orange-200 text-center">左</th>
+        </tr></thead>
+        <tbody>
+          ${[
+            ['上肢長','limb_lu_r',d.lenUpperR,'limb_lu_l',d.lenUpperL],
+            ['下肢長','limb_ll_r',d.lenLowerR,'limb_ll_l',d.lenLowerL]
+          ].map(([lbl,idR,vR,idL,vL])=>`
+            <tr class="border-b border-orange-100">
+              <td class="p-2 text-gray-600">${lbl}</td>
+              <td class="p-1 text-center"><input type="number" id="${idR}" value="${vR}" placeholder="cm" step="0.5"
+                class="w-20 border border-gray-300 rounded p-1.5 text-center text-sm focus:ring-1 focus:ring-orange-400 outline-none"></td>
+              <td class="p-1 text-center"><input type="number" id="${idL}" value="${vL}" placeholder="cm" step="0.5"
+                class="w-20 border border-gray-300 rounded p-1.5 text-center text-sm focus:ring-1 focus:ring-orange-400 outline-none"></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ④ 神経学的所見 -->
+  <div class="bg-orange-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">④ 神経学的所見</p>
+    ${fld('(1) 知覚障害',sel('limb_sensory',d.sensory,['なし','あり（上図に記入）']))}
+    ${fld('(2) 運動麻痺の種類',sel('limb_motor_type',d.motorType,
+      ['継続性','痙性','失調性','不随意運動性','弛緩（固縮）性','しんせん性']))}
+    ${fld('(3) 障害の起因部位',sel('limb_origin',d.disorderOrigin,
+      ['脳性','脊髄性','末梢神経性','筋性（筋萎縮性）','その他']))}
+
+    <p class="text-xs font-medium text-gray-700 mb-2">(4) 腱反射検査</p>
+    <div class="overflow-x-auto mb-3">
+      <table class="w-full text-xs border-collapse">
+        <thead><tr class="bg-orange-100">
+          <th class="p-2 border border-orange-200 text-left">反射</th>
+          <th class="p-2 border border-orange-200 text-center">右</th>
+          <th class="p-2 border border-orange-200 text-center">左</th>
+        </tr></thead>
+        <tbody>
+          ${[
+            ['上肢腱反射','limb_ref_ur',d.reflexUpperR,'limb_ref_ul',d.reflexUpperL],
+            ['下肢腱反射','limb_ref_lr',d.reflexLowerR,'limb_ref_ll',d.reflexLowerL],
+            ['バビンスキー反射','limb_babi_r',d.babinski,'limb_babi_l','']
+          ].map(([lbl,idR,vR,idL,vL])=>`
+            <tr class="border-b border-orange-100">
+              <td class="p-2 text-gray-600">${lbl}</td>
+              <td class="p-1">${sel(idR,vR,['+（亢進）','±（正常）','−（消失）'])}</td>
+              <td class="p-1">${lbl==='バビンスキー反射'?'':sel(idL,vL||'',['+（陽性）','−（陰性）'])}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${fld('その他の病的反射',txt('limb_path_reflex',d.pathReflex,'例：ホフマン反射陽性'))}
+    ${fld('(5) ぼうこう・直腸障害',sel('limb_bladder_rectal',d.bladderRectal,['なし','あり']))}
+  </div>
+
+  <!-- ⑤ 手指の関節可動域 -->
+  <div class="bg-orange-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">⑤ 手指の関節可動域（屈曲角度 °）</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs border-collapse">
+        <thead><tr class="bg-orange-100">
+          <th class="p-2 border border-orange-200 text-left">部位</th>
+          <th class="p-2 border border-orange-200 text-center">右（°）</th>
+          <th class="p-2 border border-orange-200 text-center">左（°）</th>
+        </tr></thead>
+        <tbody>
+          ${fingerRow('母指 MP関節','limb_th_mp_r',d.thumbMpR,'limb_th_mp_l',d.thumbMpL)}
+          ${fingerRow('母指 IP関節','limb_th_ip_r',d.thumbIpR,'limb_th_ip_l',d.thumbIpL)}
+          ${fingerRow('示指 MP関節','limb_in_mp_r',d.indexMpR,'limb_in_mp_l',d.indexMpL)}
+          ${fingerRow('示指 DIP・PIP','limb_in_pd_r',d.indexPipDipR,'limb_in_pd_l',d.indexPipDipL)}
+          ${fingerRow('中指 MP関節','limb_mi_mp_r',d.middleMpR,'limb_mi_mp_l',d.middleMpL)}
+          ${fingerRow('中指 DIP・PIP','limb_mi_pd_r',d.middlePipDipR,'limb_mi_pd_l',d.middlePipDipL)}
+          ${fingerRow('薬指 MP関節','limb_ri_mp_r',d.ringMpR,'limb_ri_mp_l',d.ringMpL)}
+          ${fingerRow('薬指 DIP・PIP','limb_ri_pd_r',d.ringPipDipR,'limb_ri_pd_l',d.ringPipDipL)}
+          ${fingerRow('小指 MP関節','limb_li_mp_r',d.littleMpR,'limb_li_mp_l',d.littleMpL)}
+          ${fingerRow('小指 DIP・PIP','limb_li_pd_r',d.littlePipDipR,'limb_li_pd_l',d.littlePipDipL)}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ⑥ 握力 -->
+  ${grid2(
+    fld('⑥ 握力 右手',num('limb_grip_r',d.gripRight,'35','kg')),
+    fld('⑥ 握力 左手',num('limb_grip_l',d.gripLeft,'30','kg'))
+  )}
+
+  <!-- ⑦ 関節可動域（他動域 ROM） -->
+  <div class="bg-orange-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-3">⑦ 関節可動域（他動域 °）</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs border-collapse">
+        <thead><tr class="bg-orange-100">
+          <th class="p-2 border border-orange-200 text-left">関節・方向</th>
+          <th class="p-2 border border-orange-200 text-center">正常値</th>
+          <th class="p-2 border border-orange-200 text-center">右（°）</th>
+          <th class="p-2 border border-orange-200 text-center">左（°）</th>
+        </tr></thead>
+        <tbody class="divide-y divide-gray-100">
+          ${romRow('肩関節 屈曲','limb_rom_sh_f_r',d.romShoulderFlexR,'limb_rom_sh_f_l',d.romShoulderFlexL,'180')}
+          ${romRow('肩関節 伸展','limb_rom_sh_e_r',d.romShoulderExtR,'limb_rom_sh_e_l',d.romShoulderExtL,'50')}
+          ${romRow('肩関節 外転','limb_rom_sh_a_r',d.romShoulderAbdR,'limb_rom_sh_a_l',d.romShoulderAbdL,'180')}
+          ${romRow('肘関節 屈曲','limb_rom_el_f_r',d.romElbowFlexR,'limb_rom_el_f_l',d.romElbowFlexL,'145')}
+          ${romRow('肘関節 伸展','limb_rom_el_e_r',d.romElbowExtR,'limb_rom_el_e_l',d.romElbowExtL,'5')}
+          ${romRow('手関節 屈曲','limb_rom_wr_f_r',d.romWristFlexR,'limb_rom_wr_f_l',d.romWristFlexL,'90')}
+          ${romRow('手関節 伸展','limb_rom_wr_e_r',d.romWristExtR,'limb_rom_wr_e_l',d.romWristExtL,'70')}
+          ${romRow('股関節 屈曲','limb_rom_hi_f_r',d.romHipFlexR,'limb_rom_hi_f_l',d.romHipFlexL,'125')}
+          ${romRow('股関節 伸展','limb_rom_hi_e_r',d.romHipExtR,'limb_rom_hi_e_l',d.romHipExtL,'15')}
+          ${romRow('股関節 外転','limb_rom_hi_a_r',d.romHipAbdR,'limb_rom_hi_a_l',d.romHipAbdL,'45')}
+          ${romRow('膝関節 屈曲','limb_rom_kn_f_r',d.romKneeFlexR,'limb_rom_kn_f_l',d.romKneeFlexL,'130')}
+          ${romRow('足関節 底屈','limb_rom_an_p_r',d.romAnkleFlexR,'limb_rom_an_p_l',d.romAnkleFlexL,'45')}
+          ${romRow('足関節 背屈','limb_rom_an_d_r',d.romAnkleExtR,'limb_rom_an_d_l',d.romAnkleExtL,'20')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ⑧ 補装具等 -->
+  <div class="mb-4">
+    <p class="text-sm font-medium text-gray-700 mb-2">⑧ 補装具・補助器具（複数可）</p>
+    <div class="grid grid-cols-2 gap-1.5">
+      ${LIMB_AIDS.map(a=>chk('limb-aid',a,d.aids.includes(a),a,'orange')).join('')}
+    </div>
+  </div>
+
+  <!-- ⑨ 移動・座位 -->
+  ${grid2(
+    fld('屋内移動手段',sel('limb_mob_in',d.mobilityIndoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','寝たきり'])),
+    fld('屋外移動手段',sel('limb_mob_out',d.mobilityOutdoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','外出不可']))
+  )}
+  ${fld('起座位保持',sel('limb_sit',d.sittingBalance,['可能','介助があれば可能','不可能']))}
+
+  <!-- ⑩ 医療器具 -->
+  ${grid2(
+    fld('人工呼吸器',sel('limb_vent',d.ventilator,['なし','あり'])),
+    fld('経管栄養',sel('limb_tube',d.tubeFeed,['なし','あり']))
+  )}
+  ${grid2(
+    fld('気道内吸引',sel('limb_suc',d.suction,['なし','あり'])),
+    fld('中心静脈栄養（IVH）',sel('limb_iv',d.ivDrip,['なし','あり']))
+  )}
+
+  <!-- ⑪ 筋力MMT -->
+  <div class="bg-orange-50 rounded-xl p-4 mb-4">
+    <p class="text-sm font-bold text-gray-700 mb-2">⑪ 筋力（MMT 0〜5）</p>
     <div class="grid grid-cols-2 gap-3">
       ${[['右上肢','limb_mmt_ra',d.mmtRightArm],['左上肢','limb_mmt_la',d.mmtLeftArm],
          ['右下肢','limb_mmt_rl',d.mmtRightLeg],['左下肢','limb_mmt_ll',d.mmtLeftLeg]].map(([lbl,id,val])=>
@@ -890,64 +1287,51 @@ function buildLimb(){
     </div>
   </div>
 
-  ${grid2(
-    fld('握力 右手',num('limb_grip_r',d.gripRight,'20','kg')),
-    fld('握力 左手',num('limb_grip_l',d.gripLeft,'20','kg'))
-  )}
-
-  <div class="mb-5 bg-orange-50 rounded-xl p-4">
-    <p class="text-sm font-medium text-gray-700 mb-3">主要関節の可動域（ROM・他動）</p>
-    <div class="grid grid-cols-2 gap-3">
-      ${[
-        ['肩関節外転 右','limb_rom_sh_r',d.romShoulderR??''],
-        ['肩関節外転 左','limb_rom_sh_l',d.romShoulderL??''],
-        ['肘関節屈曲 右','limb_rom_el_r',d.romElbowR??''],
-        ['肘関節屈曲 左','limb_rom_el_l',d.romElbowL??''],
-        ['股関節屈曲 右','limb_rom_hi_r',d.romHipR??''],
-        ['股関節屈曲 左','limb_rom_hi_l',d.romHipL??''],
-        ['膝関節屈曲 右','limb_rom_kn_r',d.romKneeR??''],
-        ['膝関節屈曲 左','limb_rom_kn_l',d.romKneeL??'']
-      ].map(([lbl,id,val])=>fld(lbl,num(id,val,'90','°'))).join('')}
+  <!-- ⑫ 日常生活動作評価表（17項目） -->
+  <div class="mb-5">
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+      <p class="text-sm font-bold text-amber-800">⑫ 日常生活動作評価表（17項目）</p>
+      <p class="text-xs text-amber-700 mt-1">認定基準体系表に使用。○＝できる(0点)／△＝困難(1点)／×＝できない(2点)</p>
     </div>
-  </div>
-
-  ${grid2(
-    fld('屋内移動手段',sel('limb_mob_in',d.mobilityIndoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','寝たきり'])),
-    fld('屋外移動手段',sel('limb_mob_out',d.mobilityOutdoor,['独力歩行','杖歩行','歩行器','車いす（自走）','車いす（介助）','外出不可']))
-  )}
-  ${fld('起座位保持',sel('limb_sit',d.sittingBalance,['可能','介助があれば可能','不可能']))}
-
-  <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 mb-2">補装具・補助器具（複数可）</label>
-    <div class="grid grid-cols-2 gap-1.5">
-      ${LIMB_AIDS.map(a=>chk('limb-aid',a,d.aids.includes(a),a,'orange')).join('')}
+    <div class="flex items-center gap-3 mb-3">
+      <span class="text-xs text-gray-500">ADL合計（補助具なし）</span>
+      <span id="adl-total" class="font-bold text-sm ${adlTotal!==null?(adlTotal>=22?'text-red-600':adlTotal>=10?'text-orange-600':'text-gray-600'):'text-gray-400'}">
+        ${adlTotal!==null?`${adlTotal} 点`:'未入力'}
+      </span>
+      <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+        <div id="adl-bar" class="h-full rounded-full transition-all ${adlTotal!==null?(adlTotal>=22?'bg-red-500':adlTotal>=10?'bg-orange-500':'bg-green-500'):'bg-gray-200'}"
+          style="width:${adlTotal!==null?Math.min(100,Math.round(adlTotal/34*100)):0}%"></div>
+      </div>
+      <span class="text-xs text-gray-400">34点満点</span>
     </div>
-  </div>
-
-  ${grid2(
-    fld('人工呼吸器',sel('limb_vent',d.ventilator,['なし','あり'])),
-    fld('経管栄養',sel('limb_tube',d.tubeFeed,['なし','あり']))
-  )}
-  ${grid2(
-    fld('気道内吸引',sel('limb_suc',d.suction,['なし','あり'])),
-    fld('中心静脈栄養',sel('limb_iv',d.ivDrip,['なし','あり']))
-  )}
-
-  <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 text-xs text-amber-800">
-    <strong>ADL 10点法評価（全7項目・任意・入力で等級を自動算出）</strong>
-  </div>
-  <div class="space-y-3">
-    ${ADL_ITEMS.map((item,i)=>`
-      <div class="border border-gray-200 rounded-xl p-4">
-        <p class="text-sm font-medium text-gray-700 mb-2">${i+1}. ${item}</p>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-          ${ADL_OPTS.map((opt,j)=>{const v=j+1,s=d.adl[i]==v;
-            return `<label class="flex items-center gap-1 p-2 rounded-lg border text-xs cursor-pointer
-              ${s?'border-orange-400 bg-orange-50 text-orange-700':'border-gray-200 text-gray-600'}">
-              <input type="radio" name="adl_${i}" value="${v}" class="adl-r" data-idx="${i}" ${s?'checked':''}>${opt}</label>`;
-          }).join('')}
-        </div>
-      </div>`).join('')}
+    <div class="space-y-2">
+      ${LIMB_ADL_ITEMS.map((item,i)=>`
+        <div class="border border-gray-200 rounded-xl p-3 ${i%2===0?'bg-white':'bg-gray-50'}">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="font-bold text-orange-600 text-xs">${item.n}.</span>
+              <span class="text-sm text-gray-700 ml-1">${item.txt}</span>
+              ${item.note?`<p class="text-xs text-blue-600 mt-0.5 ml-4">${item.note}</p>`:''}
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div>
+              <p class="text-xs text-gray-500 mb-1">補助具なし</p>
+              <div class="flex gap-1">${['○','△','×'].map(m=>adlBtn('no',i,m)).join('')}</div>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">補助具あり</p>
+              <div class="flex gap-1">${['○','△','×'].map(m=>adlBtn('with',i,m)).join('')}</div>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>
+    ${adlTotal!==null?`
+    <div class="mt-3 bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm">
+      <p class="font-bold text-gray-800 mb-1">ADL評価結果（補助具なし）：合計 <span class="${adlTotal>=22?'text-red-600':adlTotal>=10?'text-orange-600':'text-green-600'} text-lg">${adlTotal}</span> 点</p>
+      <p class="text-xs text-gray-600">≧22点→最重度相当（第1号） / 10〜21点→重度相当（第2号ルート対象） / 〜9点→中等度以下</p>
+      <p class="text-xs text-blue-700 mt-1">※認定基準体系表「政令別表第2第3〜5号の障害 + ADL10点以上 → 第2号」ルートで参照されます。</p>
+    </div>`:''}
   </div>`;
 }
 
@@ -1374,8 +1758,8 @@ function step5(wrap){
   const gTxt=g=>g===1?'1級相当（最重度）':g===2?'2級相当（重度）':'3級以下（中等度〜軽度）';
   const gCol=g=>g===1?'text-red-600 font-bold':g===2?'text-orange-500 font-bold':'text-gray-400';
 
-  const adlOk=state.disabilities.includes('limb')&&state.details.limb.adl.every(v=>v!=='');
-  const adlSum=adlOk?state.details.limb.adl.reduce((a,v)=>a+parseInt(v),0):null;
+  const limbD=res.gradeDetails?.limb;
+  const adlTotal=limbD?.adlTotal??null;
 
   const el=document.createElement('div');
   el.className='fade-in space-y-4';
@@ -1397,38 +1781,76 @@ function step5(wrap){
       </div>
     </div>
 
+    <!-- 認定基準体系表 試行フロー -->
+    <div class="bg-white rounded-2xl shadow p-5">
+      <h3 class="font-bold text-gray-800 mb-4">🔍 特別障害者手当障害程度認定基準体系表 — 試行フロー</h3>
+      <div class="space-y-3">
+        ${(res.flow||[]).map((f,i)=>`
+          <div class="flex gap-3 items-start">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
+              ${i===0?'bg-blue-100 text-blue-700':
+                f.step.includes('クリア')||f.step.includes('該当')?'bg-emerald-100 text-emerald-700':
+                f.step.includes('未達')||f.step.includes('不該当')?'bg-red-100 text-red-700':
+                'bg-gray-100 text-gray-600'}">${i+1}</div>
+            <div class="flex-1 bg-gray-50 rounded-xl p-3">
+              <p class="text-sm font-bold text-gray-800 mb-1">${f.step}</p>
+              ${f.items?`<ul class="space-y-1">${f.items.map(it=>`
+                <li class="text-xs text-gray-700 leading-relaxed">
+                  <span class="font-medium">${it.type}：</span>
+                  <span class="${it.grade===1?'text-red-600 font-bold':it.grade===2?'text-orange-600 font-bold':'text-gray-500'}">${it.label}</span>
+                  ${it.reason?`<br><span class="text-gray-500 ml-4">→ ${it.reason}</span>`:''}
+                </li>`).join('')}</ul>`:
+               f.text?`<pre class="text-xs text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">${f.text}</pre>`:''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- 評価サマリー -->
+    <div class="bg-white rounded-2xl shadow p-5">
+      <h3 class="font-bold text-gray-800 mb-3">📊 各障害の評価サマリー</h3>
+      ${Object.entries(res.grades).map(([k,g])=>`
+        <div class="py-2.5 border-b border-gray-100 last:border-0 text-sm">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">${DIS_LABELS[k]||k}</span>
+            <span class="${gCol(g)}">${gTxt(g)}</span>
+          </div>
+          ${res.gradeDetails?.[k]?.reason?`<p class="text-xs text-gray-400 mt-0.5 ml-2">→ ${res.gradeDetails[k].reason}</p>`:''}
+        </div>`).join('')}
+      ${adlTotal!==null?`
+        <div class="mt-3 bg-orange-50 rounded-xl p-3 text-xs text-orange-800">
+          <p class="font-bold mb-1">肢体ADL評価合計（補助具なし）：${adlTotal}点 / 34点満点</p>
+          <p>≧22点→最重度相当（第1号） / 10〜21点→重度（第2号ルート対象） / 〜9点→中等度以下</p>
+        </div>`:''}
+    </div>
+
+    <!-- 法令根拠 -->
     <div class="bg-white rounded-2xl shadow p-5">
       <h3 class="font-bold text-gray-800 mb-4">📋 法令・手引き根拠（章・節・条文）</h3>
       <div class="space-y-3 text-sm">
-
         <div class="rounded-xl p-4 bg-blue-50">
           <p class="text-xs text-blue-500 font-bold mb-1">根拠法令・条項</p>
           <p class="text-gray-800 font-medium text-sm leading-relaxed">${cit.article}</p>
         </div>
-
         <div class="rounded-xl p-4 bg-gray-50">
           <p class="text-xs text-gray-500 font-bold mb-1">条文（要旨）</p>
           <p class="text-gray-700 text-xs leading-relaxed">${cit.text}</p>
         </div>
-
         <div class="rounded-xl p-4 bg-green-50">
           <p class="text-xs text-green-600 font-bold mb-1">適用箇所（手引き 章・節）</p>
           <pre class="text-gray-700 text-xs leading-relaxed whitespace-pre-wrap font-sans">${cit.manual}</pre>
         </div>
-
         <div class="rounded-xl p-4 bg-indigo-50">
           <p class="text-xs text-indigo-600 font-bold mb-2">関連法令・通知</p>
           <ul class="space-y-1">
             ${cit.related.map(r=>`<li class="text-xs text-gray-700 leading-relaxed">・ ${r}</li>`).join('')}
           </ul>
         </div>
-
         ${cit.notice?`
         <div class="rounded-xl p-4 bg-yellow-50">
           <p class="text-xs text-yellow-600 font-bold mb-1">関連告示</p>
           <p class="text-xs text-gray-700">${cit.notice}</p>
         </div>`:''}
-
         <div class="rounded-xl p-4 bg-slate-50">
           <p class="text-xs text-slate-500 font-bold mb-2">除外条件（参考条文）</p>
           <ul class="text-xs text-gray-600 space-y-1">
@@ -1438,19 +1860,6 @@ function step5(wrap){
           </ul>
         </div>
       </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow p-5">
-      <h3 class="font-bold text-gray-800 mb-3">📊 各障害の評価サマリー</h3>
-      ${Object.entries(res.grades).map(([k,g])=>`
-        <div class="flex justify-between items-center py-2.5 border-b border-gray-100 last:border-0 text-sm">
-          <span class="text-gray-600">${DIS_LABELS[k]||k}</span>
-          <span class="${gCol(g)}">${gTxt(g)}</span>
-        </div>`).join('')}
-      ${adlSum!==null?`
-        <div class="mt-3 bg-orange-50 rounded-lg p-3 text-xs text-orange-800">
-          肢体ADL合計：<strong>${adlSum}/28点</strong>（≦10→1級相当 / 11〜17→2級相当 / ≧18→3級以下）
-        </div>`:''}
     </div>
 
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
@@ -1548,28 +1957,6 @@ function bindEvents(){
   bTxt('limb_onset',v=>state.details.limb.onset=v);
   bSel('limb_grade',v=>state.details.limb.grade=v);
   bSel('limb_fixed',v=>state.details.limb.fixed=v);
-  bSel('limb_mob_in',v=>state.details.limb.mobilityIndoor=v);
-  bSel('limb_mob_out',v=>state.details.limb.mobilityOutdoor=v);
-  bSel('limb_sit',v=>state.details.limb.sittingBalance=v);
-  bSel('limb_mmt_ra',v=>state.details.limb.mmtRightArm=v);
-  bSel('limb_mmt_la',v=>state.details.limb.mmtLeftArm=v);
-  bSel('limb_mmt_rl',v=>state.details.limb.mmtRightLeg=v);
-  bSel('limb_mmt_ll',v=>state.details.limb.mmtLeftLeg=v);
-  bSel('limb_vent',v=>state.details.limb.ventilator=v);
-  bSel('limb_tube',v=>state.details.limb.tubeFeed=v);
-  bSel('limb_suc',v=>state.details.limb.suction=v);
-  bSel('limb_iv',v=>state.details.limb.ivDrip=v);
-  bNum('limb_grip_r',v=>state.details.limb.gripRight=v);
-  bNum('limb_grip_l',v=>state.details.limb.gripLeft=v);
-  bNum('limb_rom_sh_r',v=>state.details.limb.romShoulderR=v);
-  bNum('limb_rom_sh_l',v=>state.details.limb.romShoulderL=v);
-  bNum('limb_rom_el_r',v=>state.details.limb.romElbowR=v);
-  bNum('limb_rom_el_l',v=>state.details.limb.romElbowL=v);
-  bNum('limb_rom_hi_r',v=>state.details.limb.romHipR=v);
-  bNum('limb_rom_hi_l',v=>state.details.limb.romHipL=v);
-  bNum('limb_rom_kn_r',v=>state.details.limb.romKneeR=v);
-  bNum('limb_rom_kn_l',v=>state.details.limb.romKneeL=v);
-
   // ── ボディ図ゾーン ──
   document.querySelectorAll('.body-zone').forEach(el=>{
     const fn=e=>{e.preventDefault();e.stopPropagation();tapZone(el.dataset.part);};
@@ -1577,6 +1964,56 @@ function bindEvents(){
     el.addEventListener('touchend',fn);
   });
 
+  // ④ 肢体 — 基本情報
+  bTxt('limb_surgery',v=>state.details.limb.surgeryDate=v);
+  // ④ 四肢周径
+  ['cu','cf','ct','cl'].forEach((k,_)=>{
+    const map={cu:'circUpper',cf:'circForearm',ct:'circThigh',cl:'circLower'};
+    bNum(`limb_${k}_r`,v=>state.details.limb[map[k]+'R']=v);
+    bNum(`limb_${k}_l`,v=>state.details.limb[map[k]+'L']=v);
+  });
+  // ④ 四肢長
+  bNum('limb_lu_r',v=>state.details.limb.lenUpperR=v);
+  bNum('limb_lu_l',v=>state.details.limb.lenUpperL=v);
+  bNum('limb_ll_r',v=>state.details.limb.lenLowerR=v);
+  bNum('limb_ll_l',v=>state.details.limb.lenLowerL=v);
+  // ④ 神経学的所見
+  bSel('limb_sensory',v=>state.details.limb.sensory=v);
+  bSel('limb_motor_type',v=>state.details.limb.motorType=v);
+  bSel('limb_origin',v=>state.details.limb.disorderOrigin=v);
+  bSel('limb_ref_ur',v=>state.details.limb.reflexUpperR=v);
+  bSel('limb_ref_ul',v=>state.details.limb.reflexUpperL=v);
+  bSel('limb_ref_lr',v=>state.details.limb.reflexLowerR=v);
+  bSel('limb_ref_ll',v=>state.details.limb.reflexLowerL=v);
+  bSel('limb_babi_r',v=>state.details.limb.babinski=v);
+  bTxt('limb_path_reflex',v=>state.details.limb.pathReflex=v);
+  bSel('limb_bladder_rectal',v=>state.details.limb.bladderRectal=v);
+  // ④ 手指ROM
+  [['limb_th_mp_r','thumbMpR'],['limb_th_mp_l','thumbMpL'],['limb_th_ip_r','thumbIpR'],['limb_th_ip_l','thumbIpL'],
+   ['limb_in_mp_r','indexMpR'],['limb_in_mp_l','indexMpL'],['limb_in_pd_r','indexPipDipR'],['limb_in_pd_l','indexPipDipL'],
+   ['limb_mi_mp_r','middleMpR'],['limb_mi_mp_l','middleMpL'],['limb_mi_pd_r','middlePipDipR'],['limb_mi_pd_l','middlePipDipL'],
+   ['limb_ri_mp_r','ringMpR'],['limb_ri_mp_l','ringMpL'],['limb_ri_pd_r','ringPipDipR'],['limb_ri_pd_l','ringPipDipL'],
+   ['limb_li_mp_r','littleMpR'],['limb_li_mp_l','littleMpL'],['limb_li_pd_r','littlePipDipR'],['limb_li_pd_l','littlePipDipL']
+  ].forEach(([id,key])=>bNum(id,v=>state.details.limb[key]=v));
+  // ④ 握力
+  bNum('limb_grip_r',v=>state.details.limb.gripRight=v);
+  bNum('limb_grip_l',v=>state.details.limb.gripLeft=v);
+  // ④ 関節ROM
+  [['limb_rom_sh_f_r','romShoulderFlexR'],['limb_rom_sh_f_l','romShoulderFlexL'],
+   ['limb_rom_sh_e_r','romShoulderExtR'],['limb_rom_sh_e_l','romShoulderExtL'],
+   ['limb_rom_sh_a_r','romShoulderAbdR'],['limb_rom_sh_a_l','romShoulderAbdL'],
+   ['limb_rom_el_f_r','romElbowFlexR'],['limb_rom_el_f_l','romElbowFlexL'],
+   ['limb_rom_el_e_r','romElbowExtR'],['limb_rom_el_e_l','romElbowExtL'],
+   ['limb_rom_wr_f_r','romWristFlexR'],['limb_rom_wr_f_l','romWristFlexL'],
+   ['limb_rom_wr_e_r','romWristExtR'],['limb_rom_wr_e_l','romWristExtL'],
+   ['limb_rom_hi_f_r','romHipFlexR'],['limb_rom_hi_f_l','romHipFlexL'],
+   ['limb_rom_hi_e_r','romHipExtR'],['limb_rom_hi_e_l','romHipExtL'],
+   ['limb_rom_hi_a_r','romHipAbdR'],['limb_rom_hi_a_l','romHipAbdL'],
+   ['limb_rom_kn_f_r','romKneeFlexR'],['limb_rom_kn_f_l','romKneeFlexL'],
+   ['limb_rom_an_p_r','romAnkleFlexR'],['limb_rom_an_p_l','romAnkleFlexL'],
+   ['limb_rom_an_d_r','romAnkleExtR'],['limb_rom_an_d_l','romAnkleExtL']
+  ].forEach(([id,key])=>bNum(id,v=>state.details.limb[key]=v));
+  // ④ 補装具・移動・医療器具・MMT
   document.querySelectorAll('.limb-aid').forEach(c=>{
     c.addEventListener('change',e=>{
       const k=e.target.dataset.key;
@@ -1586,12 +2023,18 @@ function bindEvents(){
       e.target.checked?l.classList.add('border-orange-400','bg-orange-50'):l.classList.remove('border-orange-400','bg-orange-50');
     });
   });
-  document.querySelectorAll('.adl-r').forEach(r=>{
-    r.addEventListener('change',e=>{
-      state.details.limb.adl[parseInt(e.target.dataset.idx)]=parseInt(e.target.value);
-      updRadio(`adl_${e.target.dataset.idx}`,ORG,OFF);
-    });
-  });
+  bSel('limb_mob_in',v=>state.details.limb.mobilityIndoor=v);
+  bSel('limb_mob_out',v=>state.details.limb.mobilityOutdoor=v);
+  bSel('limb_sit',v=>state.details.limb.sittingBalance=v);
+  bSel('limb_vent',v=>state.details.limb.ventilator=v);
+  bSel('limb_tube',v=>state.details.limb.tubeFeed=v);
+  bSel('limb_suc',v=>state.details.limb.suction=v);
+  bSel('limb_iv',v=>state.details.limb.ivDrip=v);
+  bSel('limb_mmt_ra',v=>state.details.limb.mmtRightArm=v);
+  bSel('limb_mmt_la',v=>state.details.limb.mmtLeftArm=v);
+  bSel('limb_mmt_rl',v=>state.details.limb.mmtRightLeg=v);
+  bSel('limb_mmt_ll',v=>state.details.limb.mmtLeftLeg=v);
+  // ADLは setAdl() グローバル関数で直接更新（onclick/ontouchend）
 
   // ④ 視覚
   bTxt('vis_disease',v=>state.details.vision.disease=v);
