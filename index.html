@@ -33,9 +33,10 @@ const initState = () => ({
       // 基本情報
       disease: '',            // 傷病名・原因疾患
       grade: '',              // 身体障害者手帳等級 1-6
-      onset: '',              // 発症・受傷年月
+      onsetEra: '令和',       // 発症・受傷年月 元号
+      onsetYear: '',          // 発症・受傷年月 和暦年数
+      onsetMonth: '',         // 発症・受傷年月 月
       surgeryDate: '',        // 手術日（参考）
-      fixed: '',              // 障害固定の別
       // ① 体のイラスト — 部位と障害種別
       parts: [],              // 障害部位（複数可）
       partFunc: {},           // 各部位の障害種別（欠損/運動麻痺/知覚麻痺/知覚異常/その他障害）
@@ -1186,19 +1187,38 @@ function buildLimb(){
         class="w-14 border border-gray-300 rounded p-1 text-center text-xs focus:ring-1 focus:ring-orange-400 outline-none"></td>
     </tr>`;
 
+  // 和暦→西暦変換
+  const eraStarts={'令和':2018,'平成':1988,'昭和':1925};
+  const seirekiTxt=(era,y)=>{const n=parseInt(y);return(!n||isNaN(n))?'':` (西暦${(eraStarts[era]||2018)+n}年)`;};
+
+  // 和暦ピッカー
+  const onsetPicker=`
+    <div class="flex flex-wrap items-center gap-1.5">
+      <select id="limb_onset_era"
+        class="border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none">
+        ${['令和','平成','昭和'].map(e=>`<option value="${e}" ${d.onsetEra===e?'selected':''}>${e}</option>`).join('')}
+      </select>
+      <input type="number" id="limb_onset_year" value="${d.onsetYear}" min="1" max="99" placeholder="年"
+        class="border border-gray-300 rounded-lg p-2 w-16 text-center text-sm focus:ring-2 focus:ring-blue-400 outline-none">
+      <span class="text-gray-600 text-sm">年</span>
+      <select id="limb_onset_month"
+        class="border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none">
+        <option value="">月</option>
+        ${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${d.onsetMonth==String(i+1)?'selected':''}>${i+1}月</option>`).join('')}
+      </select>
+      <span id="limb_onset_seireki" class="text-xs text-gray-400">${seirekiTxt(d.onsetEra,d.onsetYear)}</span>
+    </div>`;
+
   return `
   ${secHeader('肢体不自由（様式第11号）','orange','border-orange-200')}
-  ${grid2(
-    fld('傷病名・原因疾患',txt('limb_disease',d.disease,'例：脳梗塞後遺症、頸髄損傷')),
-    fld('発症・受傷年月',txt('limb_onset',d.onset,'例：2020年3月'))
-  )}
+  ${fld('傷病名・原因疾患',txt('limb_disease',d.disease,'例：脳梗塞後遺症、頸髄損傷'))}
+  ${fld('発症・受傷年月',onsetPicker)}
   ${grid2(
     fld('身体障害者手帳等級 <span class="text-red-500">*</span>',
       sel('limb_grade',d.grade,[{v:'1',l:'1級'},{v:'2',l:'2級'},{v:'3',l:'3級'},{v:'4',l:'4級'},{v:'5',l:'5級'},{v:'6',l:'6級'}])
     ),
-    fld('障害固定の別',sel('limb_fixed',d.fixed,['固定','未固定']))
+    fld('手術日（参考）',txt('limb_surgery',d.surgeryDate,'例：令和2年5月'))
   )}
-  ${fld('手術日（参考）',txt('limb_surgery',d.surgeryDate,'例：2020年5月'))}
 
   <!-- ① 体のイラスト -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
@@ -2099,9 +2119,18 @@ function bindEvents(){
 
   // ④ 肢体
   bTxt('limb_disease',v=>state.details.limb.disease=v);
-  bTxt('limb_onset',v=>state.details.limb.onset=v);
   bSel('limb_grade',v=>state.details.limb.grade=v);
-  bSel('limb_fixed',v=>state.details.limb.fixed=v);
+  // 発症年月（和暦ピッカー）
+  const eraStarts2={'令和':2018,'平成':1988,'昭和':1925};
+  const updateOnsetSeireki=()=>{
+    const era=state.details.limb.onsetEra;
+    const y=parseInt(state.details.limb.onsetYear);
+    const span=document.getElementById('limb_onset_seireki');
+    if(span)span.textContent=(!y||isNaN(y))?'':`(西暦${(eraStarts2[era]||2018)+y}年)`;
+  };
+  bSel('limb_onset_era',v=>{state.details.limb.onsetEra=v;updateOnsetSeireki();});
+  bNum('limb_onset_year',v=>{state.details.limb.onsetYear=v;updateOnsetSeireki();});
+  bSel('limb_onset_month',v=>state.details.limb.onsetMonth=v);
   // ── ボディ図ゾーン ──
   document.querySelectorAll('.body-zone').forEach(el=>{
     const fn=e=>{e.preventDefault();e.stopPropagation();tapZone(el.dataset.part);};
