@@ -114,7 +114,9 @@ const initState = () => ({
       spasticityRightArm:'',spasticityLeftArm:'',
       spasticityRightLeg:'',spasticityLeftLeg:'',
       // バビンスキー反射（左右別）
-      babinskiL:''
+      babinskiL:'',
+      // 補装具等 その他記載
+      aidsOther:''
     },
 
     // ─── 視覚障害（身体障害者診断書・意見書 視覚障害用）
@@ -544,7 +546,13 @@ const LIMB_PARTS = {
 };
 // 診断書体イラストの記号（実際の様式に準拠）
 const LIMB_MARK_TYPES = ['欠損','運動麻痺','知覚麻痺','知覚異常','その他障害'];
-const LIMB_AIDS  = ['車いす（常時）','車いす（一時）','松葉杖','義手','義足','上肢装具','下肢装具','体幹装具','歩行補助車','補助犬'];
+// 様式第11号 補装具等 — 記載のある項目のみ
+const LIMB_AIDS = [
+  '義手','義足',
+  '上肢装具','下肢装具','体幹装具',
+  '車いす（手動）','車いす（電動）',
+  '松葉杖','T字杖','歩行器'
+];
 
 // 診断書様式 ⑫ 日常生活動作評価表（17項目）
 const LIMB_ADL_ITEMS = [
@@ -1285,14 +1293,16 @@ function buildLimb(){
 
   <!-- ④ 神経学的所見 -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
-    <p class="text-sm font-bold text-gray-700 mb-3">④ 神経学的所見</p>
+    <p class="text-sm font-bold text-gray-700 mb-1">④ 神経学的所見</p>
+    <p class="text-xs text-gray-500 mb-3">※ 以上のない項目は空欄で可（空欄＝所見なし）</p>
     ${fld('(1) 知覚障害',sel('limb_sensory',d.sensory,['なし','あり（上図に記入）']))}
     ${fld('(2) 運動麻痺の種類',sel('limb_motor_type',d.motorType,
       ['継続性','痙性','失調性','不随意運動性','弛緩（固縮）性','しんせん性']))}
     ${fld('(3) 障害の起因部位',sel('limb_origin',d.disorderOrigin,
       ['脳性','脊髄性','末梢神経性','筋性（筋萎縮性）','その他']))}
 
-    <p class="text-xs font-medium text-gray-700 mb-2">(4) 腱反射検査</p>
+    <p class="text-xs font-medium text-gray-700 mb-1">(4) 腱反射検査</p>
+    <p class="text-xs text-gray-500 mb-2">※ 空欄＝所見なし（以上のない場合は選択不要）</p>
     <div class="overflow-x-auto mb-3">
       <table class="w-full text-xs border-collapse">
         <thead><tr class="bg-orange-100">
@@ -1367,7 +1377,8 @@ function buildLimb(){
   <!-- ⑦ 関節可動域（他動域・自動域） -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
     <p class="text-sm font-bold text-gray-700 mb-1">⑦ 関節可動域（°）</p>
-    <p class="text-xs text-gray-500 mb-3">他動域＝検者が動かした角度 ／ <span class="text-blue-600">自動域＝患者自身が動かした角度</span></p>
+    <p class="text-xs text-gray-500 mb-1">他動域＝検者が動かした角度 ／ <span class="text-blue-600">自動域＝患者自身が動かした角度</span></p>
+    <p class="text-xs text-gray-500 mb-3">※ 以上のない関節は空欄で可（空欄＝制限なし）</p>
     <div class="overflow-x-auto">
       <table class="w-full text-xs border-collapse">
         <thead>
@@ -1403,11 +1414,24 @@ function buildLimb(){
     </div>
   </div>
 
-  <!-- ⑧ 補装具等 -->
+  <!-- ⑧ 補装具等（様式第11号 記載項目のみ） -->
   <div class="mb-4">
-    <p class="text-sm font-medium text-gray-700 mb-2">⑧ 補装具・補助器具（複数可）</p>
-    <div class="grid grid-cols-2 gap-1.5">
-      ${LIMB_AIDS.map(a=>chk('limb-aid',a,d.aids.includes(a),a,'orange')).join('')}
+    <p class="text-sm font-medium text-gray-700 mb-1">⑧ 補装具の使用状況（複数可）</p>
+    <p class="text-xs text-gray-500 mb-2">※ 空欄＝使用なし（使用していないものは選択不要）</p>
+    <p class="text-xs text-gray-600 font-medium mb-1">義肢</p>
+    <div class="grid grid-cols-2 gap-1.5 mb-2">
+      ${['義手','義足'].map(a=>chk('limb-aid',a,d.aids.includes(a),a,'orange')).join('')}
+    </div>
+    <p class="text-xs text-gray-600 font-medium mb-1">装具</p>
+    <div class="grid grid-cols-2 gap-1.5 mb-2">
+      ${['上肢装具','下肢装具','体幹装具'].map(a=>chk('limb-aid',a,d.aids.includes(a),a,'orange')).join('')}
+    </div>
+    <p class="text-xs text-gray-600 font-medium mb-1">移動補助具</p>
+    <div class="grid grid-cols-2 gap-1.5 mb-2">
+      ${['車いす（手動）','車いす（電動）','松葉杖','T字杖','歩行器'].map(a=>chk('limb-aid',a,d.aids.includes(a),a,'orange')).join('')}
+    </div>
+    <div class="mt-1">
+      ${fld('その他',txt('limb_aids_other',d.aidsOther,'例：頭部保護帽'))}
     </div>
   </div>
 
@@ -1430,12 +1454,13 @@ function buildLimb(){
 
   <!-- ⑪ 筋力MMT + 筋緊張 -->
   <div class="bg-orange-50 rounded-xl p-4 mb-4">
-    <p class="text-sm font-bold text-gray-700 mb-2">⑪ 筋力（MMT 0〜5）</p>
+    <p class="text-sm font-bold text-gray-700 mb-1">⑪ 筋力（MMT 0〜5）</p>
+    <p class="text-xs text-gray-500 mb-2">※ 空欄＝所見なし（以上のない肢は記入不要）　0＝収縮なし／1＝わずか／2＝重力なし／3＝重力に抗す／4＝抵抗に打ち勝つ／5＝正常</p>
     <div class="grid grid-cols-2 gap-3 mb-4">
       ${[['右上肢','limb_mmt_ra',d.mmtRightArm],['左上肢','limb_mmt_la',d.mmtLeftArm],
          ['右下肢','limb_mmt_rl',d.mmtRightLeg],['左下肢','limb_mmt_ll',d.mmtLeftLeg]].map(([lbl,id,val])=>
-        fld(lbl,sel(id,val,[{v:'0',l:'0（収縮なし）'},{v:'1',l:'1（わずか）'},{v:'2',l:'2（重力なし）'},
-          {v:'3',l:'3（重力に抗す）'},{v:'4',l:'4（抵抗に打ち勝つ）'},{v:'5',l:'5（正常）'}]))
+        fld(lbl,`<input type="number" id="${id}" value="${val}" min="0" max="5" step="1" placeholder="-"
+          class="border border-gray-300 rounded-lg p-2 w-20 text-center focus:ring-2 focus:ring-orange-400 outline-none text-sm">`)
       ).join('')}
     </div>
     <p class="text-xs font-bold text-gray-700 mb-1">筋緊張（Modified Ashworth Scale）</p>
@@ -2227,10 +2252,11 @@ function bindEvents(){
   bSel('limb_tube',v=>state.details.limb.tubeFeed=v);
   bSel('limb_suc',v=>state.details.limb.suction=v);
   bSel('limb_iv',v=>state.details.limb.ivDrip=v);
-  bSel('limb_mmt_ra',v=>state.details.limb.mmtRightArm=v);
-  bSel('limb_mmt_la',v=>state.details.limb.mmtLeftArm=v);
-  bSel('limb_mmt_rl',v=>state.details.limb.mmtRightLeg=v);
-  bSel('limb_mmt_ll',v=>state.details.limb.mmtLeftLeg=v);
+  bNum('limb_mmt_ra',v=>state.details.limb.mmtRightArm=v);
+  bNum('limb_mmt_la',v=>state.details.limb.mmtLeftArm=v);
+  bNum('limb_mmt_rl',v=>state.details.limb.mmtRightLeg=v);
+  bNum('limb_mmt_ll',v=>state.details.limb.mmtLeftLeg=v);
+  bTxt('limb_aids_other',v=>state.details.limb.aidsOther=v);
   // ADLは setAdl() グローバル関数で直接更新（onclick/ontouchend）
 
   // ④ 視覚
