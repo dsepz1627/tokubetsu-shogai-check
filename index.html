@@ -454,7 +454,9 @@ function buildBodyDiagram(){
 
           <!-- 体幹（タップ可） -->
           <rect data-part="trunk" class="body-zone" ${zp('trunk')} stroke-width="1.5"
-            x="68" y="61" width="64" height="95" rx="10" style="cursor:pointer;"/>
+            x="68" y="61" width="64" height="95" rx="10" style="cursor:pointer;"
+            onclick="tapZone('trunk')"
+            ontouchend="event.preventDefault();event.stopPropagation();tapZone('trunk')"/>
           <!-- 骨盤（体幹と同色・タップ不可） -->
           <rect data-part="trunk" class="body-ext" ${zp('trunk')} stroke-width="1"
             x="68" y="156" width="64" height="20" rx="7" pointer-events="none"/>
@@ -464,34 +466,44 @@ function buildBodyDiagram(){
 
           <!-- 右上肢（人体の右＝画面の左） -->
           <rect data-part="rightArm" class="body-zone" ${zp('rightArm')} stroke-width="1.5"
-            x="34" y="63" width="30" height="100" rx="11" style="cursor:pointer;"/>
+            x="34" y="63" width="30" height="100" rx="11" style="cursor:pointer;"
+            onclick="tapZone('rightArm')"
+            ontouchend="event.preventDefault();event.stopPropagation();tapZone('rightArm')"/>
           <!-- 右肘の区切り線 -->
           <line x1="34" y1="138" x2="64" y2="138" stroke="${zoneStroke('rightArm')}"
             stroke-width="0.8" pointer-events="none"/>
           <!-- 右手（タップ可） -->
-          <ellipse data-part="rightHand" class="body-zone" ${zp('rightHand')} stroke-width="1.5"
-            cx="49" cy="173" rx="14" ry="9" style="cursor:pointer;"/>
-          <text data-part-txt="rightHand" x="49" y="176" text-anchor="middle" font-size="6"
+          <ellipse data-part="rightHand" class="body-zone" ${zp('rightHand')} stroke-width="2"
+            cx="49" cy="175" rx="16" ry="11" style="cursor:pointer;"
+            onclick="tapZone('rightHand')"
+            ontouchend="event.preventDefault();event.stopPropagation();tapZone('rightHand')"/>
+          <text data-part-txt="rightHand" x="49" y="178" text-anchor="middle" font-size="6"
             fill="${zoneTxtColor('rightHand')}" pointer-events="none">右手</text>
           <text data-part-txt="rightArm" x="49" y="107" text-anchor="middle" font-size="8"
             fill="${zoneTxtColor('rightArm')}" pointer-events="none">右上肢</text>
 
           <!-- 左上肢 -->
           <rect data-part="leftArm" class="body-zone" ${zp('leftArm')} stroke-width="1.5"
-            x="136" y="63" width="30" height="100" rx="11" style="cursor:pointer;"/>
+            x="136" y="63" width="30" height="100" rx="11" style="cursor:pointer;"
+            onclick="tapZone('leftArm')"
+            ontouchend="event.preventDefault();event.stopPropagation();tapZone('leftArm')"/>
           <line x1="136" y1="138" x2="166" y2="138" stroke="${zoneStroke('leftArm')}"
             stroke-width="0.8" pointer-events="none"/>
           <!-- 左手（タップ可） -->
-          <ellipse data-part="leftHand" class="body-zone" ${zp('leftHand')} stroke-width="1.5"
-            cx="151" cy="173" rx="14" ry="9" style="cursor:pointer;"/>
-          <text data-part-txt="leftHand" x="151" y="176" text-anchor="middle" font-size="6"
+          <ellipse data-part="leftHand" class="body-zone" ${zp('leftHand')} stroke-width="2"
+            cx="151" cy="175" rx="16" ry="11" style="cursor:pointer;"
+            onclick="tapZone('leftHand')"
+            ontouchend="event.preventDefault();event.stopPropagation();tapZone('leftHand')"/>
+          <text data-part-txt="leftHand" x="151" y="178" text-anchor="middle" font-size="6"
             fill="${zoneTxtColor('leftHand')}" pointer-events="none">左手</text>
           <text data-part-txt="leftArm" x="151" y="107" text-anchor="middle" font-size="8"
             fill="${zoneTxtColor('leftArm')}" pointer-events="none">左上肢</text>
 
           <!-- 右下肢 -->
           <rect data-part="rightLeg" class="body-zone" ${zp('rightLeg')} stroke-width="1.5"
-            x="71" y="178" width="27" height="147" rx="10" style="cursor:pointer;"/>
+            x="71" y="178" width="27" height="147" rx="10" style="cursor:pointer;"
+            onclick="tapZone('rightLeg')"
+            ontouchend="event.preventDefault();event.stopPropagation();tapZone('rightLeg')"/>
           <line x1="71" y1="252" x2="98" y2="252" stroke="${zoneStroke('rightLeg')}"
             stroke-width="0.8" pointer-events="none"/>
           <ellipse data-part="rightLeg" class="body-ext" ${zp('rightLeg')} stroke-width="1"
@@ -501,7 +513,9 @@ function buildBodyDiagram(){
 
           <!-- 左下肢 -->
           <rect data-part="leftLeg" class="body-zone" ${zp('leftLeg')} stroke-width="1.5"
-            x="102" y="178" width="27" height="147" rx="10" style="cursor:pointer;"/>
+            x="102" y="178" width="27" height="147" rx="10" style="cursor:pointer;"
+            onclick="tapZone('leftLeg')"
+            ontouchend="event.preventDefault();event.stopPropagation();tapZone('leftLeg')"/>
           <line x1="102" y1="252" x2="129" y2="252" stroke="${zoneStroke('leftLeg')}"
             stroke-width="0.8" pointer-events="none"/>
           <ellipse data-part="leftLeg" class="body-ext" ${zp('leftLeg')} stroke-width="1"
