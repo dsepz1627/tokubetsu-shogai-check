@@ -316,12 +316,21 @@ function setZoneLevel(partKey,level){
   renderZonePanel();
 }
 
+const HAND_PARTS = new Set(['rightHand','leftHand']);
 function updateBodyDiagram(){
   Object.keys(LIMB_PARTS).forEach(part=>{
     document.querySelectorAll(`[data-part="${part}"]`).forEach(el=>{
       if(el.classList.contains('body-zone')){
-        el.setAttribute('fill',zoneFill(part));
-        el.setAttribute('stroke',zoneStroke(part));
+        const f=state.details.limb.partFunc[part];
+        if(HAND_PARTS.has(part)&&!f){
+          el.setAttribute('fill','#e0f2fe');
+          el.setAttribute('stroke','#38bdf8');
+          el.setAttribute('stroke-dasharray','3 2');
+        } else {
+          el.setAttribute('fill',zoneFill(part));
+          el.setAttribute('stroke',zoneStroke(part));
+          el.removeAttribute('stroke-dasharray');
+        }
       } else if(el.classList.contains('body-ext')){
         el.setAttribute('fill',zoneFill(part));
         el.setAttribute('stroke',zoneStroke(part));
@@ -430,6 +439,12 @@ function setAdl(col, idx, mark) {
 
 function buildBodyDiagram(){
   function zp(p){return `fill="${zoneFill(p)}" stroke="${zoneStroke(p)}"`;} // zone paint attrs
+  // 手のひら専用: 未選択時は水色点線で視認できるようにする
+  function zpHand(p){
+    const f=state.details.limb.partFunc[p];
+    if(f)return `fill="${zoneFill(p)}" stroke="${zoneStroke(p)}"`;
+    return `fill="#e0f2fe" stroke="#38bdf8" stroke-dasharray="3 2"`;
+  }
   return `
   <div class="mb-5">
     <div class="flex items-center justify-between mb-2">
@@ -473,12 +488,12 @@ function buildBodyDiagram(){
           <line x1="34" y1="138" x2="64" y2="138" stroke="${zoneStroke('rightArm')}"
             stroke-width="0.8" pointer-events="none"/>
           <!-- 右手（タップ可） -->
-          <ellipse data-part="rightHand" class="body-zone" ${zp('rightHand')} stroke-width="2"
-            cx="49" cy="175" rx="16" ry="11" style="cursor:pointer;"
+          <rect data-part="rightHand" class="body-zone" ${zpHand('rightHand')} stroke-width="2"
+            x="33" y="165" width="32" height="22" rx="9" style="cursor:pointer;"
             onclick="tapZone('rightHand')"
             ontouchend="event.preventDefault();event.stopPropagation();tapZone('rightHand')"/>
-          <text data-part-txt="rightHand" x="49" y="178" text-anchor="middle" font-size="6"
-            fill="${zoneTxtColor('rightHand')}" pointer-events="none">右手</text>
+          <text data-part-txt="rightHand" x="49" y="179" text-anchor="middle" font-size="6.5"
+            fill="#0369a1" pointer-events="none">右手</text>
           <text data-part-txt="rightArm" x="49" y="107" text-anchor="middle" font-size="8"
             fill="${zoneTxtColor('rightArm')}" pointer-events="none">右上肢</text>
 
@@ -490,12 +505,12 @@ function buildBodyDiagram(){
           <line x1="136" y1="138" x2="166" y2="138" stroke="${zoneStroke('leftArm')}"
             stroke-width="0.8" pointer-events="none"/>
           <!-- 左手（タップ可） -->
-          <ellipse data-part="leftHand" class="body-zone" ${zp('leftHand')} stroke-width="2"
-            cx="151" cy="175" rx="16" ry="11" style="cursor:pointer;"
+          <rect data-part="leftHand" class="body-zone" ${zpHand('leftHand')} stroke-width="2"
+            x="135" y="165" width="32" height="22" rx="9" style="cursor:pointer;"
             onclick="tapZone('leftHand')"
             ontouchend="event.preventDefault();event.stopPropagation();tapZone('leftHand')"/>
-          <text data-part-txt="leftHand" x="151" y="178" text-anchor="middle" font-size="6"
-            fill="${zoneTxtColor('leftHand')}" pointer-events="none">左手</text>
+          <text data-part-txt="leftHand" x="151" y="179" text-anchor="middle" font-size="6.5"
+            fill="#0369a1" pointer-events="none">左手</text>
           <text data-part-txt="leftArm" x="151" y="107" text-anchor="middle" font-size="8"
             fill="${zoneTxtColor('leftArm')}" pointer-events="none">左上肢</text>
 
